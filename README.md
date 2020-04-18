@@ -1,2 +1,2 @@
 # sand.js
-build pagoda with sand.js
+Build the world with sand.js

@@ -19,15 +19,23 @@ function pick(obj, keys) {
 class DOMTextComponent {
     constructor(text) {
         this.text = text;
+        this.parentNode = null;
     }
     mountComponent(parentNode) {
         parentNode.innerText = this.text;
+        this.parentNode = parentNode;
+    }
+    receiveComponent(text) {
+        const { parentNode } = this;
+        parentNode.innerText = text;
     }
 }
 
 class DOMComponent {
     constructor(element) {
         this.element = element;
+        this.parentNode = null;
+        this.vdom = null;
     }
     mountComponent(parentNode) {
         const { element } = this;
@@ -37,7 +45,7 @@ class DOMComponent {
         const tag = document.createElement(type);
 
         for (const [propName, prop] of Object.entries(props)) {
-            if (propName !== 'children') {
+            if (propName !== "children") {
                 tag.setAttribute(propName, prop);
             }
         }
@@ -47,12 +55,41 @@ class DOMComponent {
             childVdom.mountComponent(tag);
         }
         parentNode.appendChild(tag);
+        this.parentNode = parentNode;
+        this.vdom = tag;
+    }
+    receiveComponent(nextElement) {
+        const {parentNode, element, vdom} = this;
+        const nextProps = nextElement.props;
+        const curProps = element.props;
+
+        const mixProps = omit({...curProps, ...nextProps}, ['children']);
+        // 更新属性
+        for (let [propName, prop] of Object.entries(mixProps)) {
+            // 需要出的属性
+            if (!nextProps[propName]) {
+                vdom.removeAttribute(propName);
+            }
+
+            // 新增加的属性
+            if (!curProps[propName]) {
+                vdom.setAttribute(propName, prop);
+            }
+
+            // 要更新的属性
+            if (curProps[propName] !== nextProps[propName]) {
+                vdom.setAttribute(propName, prop);
+            }
+        }
     }
 }
 class DOMCompositeComponent {
     constructor(element) {
         this.element = element;
         this.instance = null;
+        this.parentNode = null;
+        this.vdom = null;
+        this.renderedElement = null;
     }
 
     mountComponent(parentNode) {
@@ -60,11 +97,36 @@ class DOMCompositeComponent {
 
         const { type: Component, props } = element;
 
-        const instance = (this.instance = new Component());
+        const instance = new Component();
+        instance._reactInternalInstance = this;
 
-        const vdom = instantiateDOMComponent(instance.render());
+        this.instance = instance;
+        const nextElement = instance.render();
+        this.renderedElement = nextElement;
+
+        const vdom = instantiateDOMComponent(nextElement);
 
         vdom.mountComponent(parentNode);
+        this.parentNode = parentNode;
+        this.vdom = vdom;
+    }
+    receiveComponent(newState) {
+        const { instance, element, parentNode, renderedElement, vdom } = this;
+
+        const nextState = { ...instance.state, ...newState };
+        const nextProps = element.props;
+
+        instance.state = nextState;
+        const nextElement = instance.render();
+        this.renderedElement = nextElement;
+
+        if (renderedElement.type === nextElement.type) {
+            vdom.receiveComponent(nextElement);
+        } else {
+            const nextVdom = instantiateDOMComponent(nextElement);
+            nextVdom.mountComponent(parentNode);
+            this.vdom = nextVdom;
+        }
     }
 }
 
@@ -75,8 +137,14 @@ function SandElement(type, key, props) {
 }
 
 class Component {
-    constructor(props) {}
-    setState() {}
+    constructor(props) {
+        this.props = props;
+    }
+    setState(newState) {
+        console.log("Component setState", newState);
+
+        this._reactInternalInstance.receiveComponent(newState);
+    }
     render() {}
 }
 function instantiateDOMComponent(node) {

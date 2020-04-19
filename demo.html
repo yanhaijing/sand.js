@@ -4,6 +4,14 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>demo</title>
+        <style>
+            .div11 {
+                background: red;
+            }
+            .div12 {
+                background: green;
+            }
+        </style>    
     </head>
     <body>
         <h1>demo</h1>
@@ -11,10 +19,18 @@
         <script src="sand.js"></script>
         <script>
             class MyC extends Component {
+                constructor(props) {
+                    super(props)
+                    this.state = { number: 1 };
+
+                    setTimeout(() => this.setState({number: 2}), 1000);
+                }
                 render() {
-                    return createElement("div", {id: 'div1', class: 'div1'}, [
+                    const { number } = this.state;
+                    return createElement("div", { id: "div1", class: "div1"+number }, [
                         createElement("span", null, ["hello"]),
                         createElement("span", null, ["world"]),
+                        createElement("span", null, [number]),
                     ]);
                 }
             }

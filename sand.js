@@ -20,14 +20,19 @@ class DOMTextComponent {
     constructor(text) {
         this.text = text;
         this.parentNode = null;
+        this.textNode = null;
     }
     mountComponent(parentNode) {
-        parentNode.innerText = this.text;
+        const textNode = document.createTextNode(this.text);
+        parentNode.appendChild(textNode);
         this.parentNode = parentNode;
+        this.textNode = textNode;
     }
     receiveComponent(text) {
-        const { parentNode } = this;
-        parentNode.innerText = text;
+        this.textNode.textContent = text;
+    }
+    unmountComponent() {
+        this.parentNode.removeChild(this.textNode);
     }
 }
 
@@ -36,6 +41,7 @@ class DOMComponent {
         this.element = element;
         this.parentNode = null;
         this.vdom = null;
+        this.childVdoms = [];
     }
     mountComponent(parentNode) {
         const { element } = this;
@@ -53,17 +59,18 @@ class DOMComponent {
         for (let child of props.children) {
             const childVdom = instantiateDOMComponent(child);
             childVdom.mountComponent(tag);
+            this.childVdoms.push(childVdom);
         }
         parentNode.appendChild(tag);
         this.parentNode = parentNode;
         this.vdom = tag;
     }
     receiveComponent(nextElement) {
-        const {parentNode, element, vdom} = this;
+        const { parentNode, element, vdom, childVdoms } = this;
         const nextProps = nextElement.props;
         const curProps = element.props;
 
-        const mixProps = omit({...curProps, ...nextProps}, ['children']);
+        const mixProps = omit({ ...curProps, ...nextProps }, ["children"]);
         // 更新属性
         for (let [propName, prop] of Object.entries(mixProps)) {
             // 需要出的属性
@@ -81,6 +88,60 @@ class DOMComponent {
                 vdom.setAttribute(propName, prop);
             }
         }
+
+        const nextChildren = nextProps.children;
+        const curChildren = curProps.children;
+
+        const curChildrenMap = curChildren.reduce((map, child, index) => {
+            const key = child.key || index;
+            map[key] = {
+                child,
+                used: false,
+                index: index,
+            };
+            return map;
+        }, {});
+
+        let lastIndex = 0;
+        let curIndex = 0;
+        for (const child of nextChildren) {
+            const key = child.key || curIndex;
+
+            const prevChild = curChildrenMap[key];
+
+            if (prevChild) {
+                const childvdom = childVdoms[prevChild.index];
+
+                childvdom.receiveComponent(child);
+                prevChild.used = true;
+                if (prevChild.index < lastIndex) {
+                    parentNode.appendChild(childvdom);
+                } else {
+                    lastIndex = prevChild.index;
+                }
+            } else {
+                // 新增的节点
+                const childVdom = instantiateDOMComponent(child);
+                childVdom.mountComponent(vdom);
+            }
+
+            curIndex = curIndex + 1;
+        }
+        // 删除用不到的节点
+        for (const map of Object.values(curChildrenMap)) {
+            if (!map.used) {
+                map.child.unmountComponent();
+            }
+        }
+    }
+    unmountComponent() {
+        const { parentNode, element, vdom } = this;
+
+        for (const child of element.props.children) {
+            child.unmountComponent();
+        }
+
+        parentNode.removeChild(vdom);
     }
 }
 class DOMCompositeComponent {
@@ -123,10 +184,15 @@ class DOMCompositeComponent {
         if (renderedElement.type === nextElement.type) {
             vdom.receiveComponent(nextElement);
         } else {
+            vdom.unmountComponent();
             const nextVdom = instantiateDOMComponent(nextElement);
             nextVdom.mountComponent(parentNode);
             this.vdom = nextVdom;
         }
+    }
+    unmountComponent() {
+        const { vdom } = this;
+        vdom.unmountComponent();
     }
 }
 

@@ -12,7 +12,7 @@
         <script>
             class MyC extends Component {
                 render() {
-                    return createElement("div", null, [
+                    return createElement("div", {id: 'div1', class: 'div1'}, [
                         createElement("span", null, ["hello"]),
                         createElement("span", null, ["world"]),
                     ]);

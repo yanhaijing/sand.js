@@ -1,3 +1,21 @@
+function omit(obj, keys) {
+    return Object.keys(obj)
+        .filter((key) => keys.indexOf(key) === -1)
+        .reduce((res, key) => {
+            res[key] = obj[key];
+            return res;
+        }, {});
+}
+
+function pick(obj, keys) {
+    return Object.keys(obj)
+        .filter((key) => keys.indexOf(key) !== -1)
+        .reduce((res, key) => {
+            res[key] = obj[key];
+            return res;
+        }, {});
+}
+
 class DOMTextComponent {
     constructor(text) {
         this.text = text;
@@ -12,13 +30,19 @@ class DOMComponent {
         this.element = element;
     }
     mountComponent(parentNode) {
-        const {element} = this;
+        const { element } = this;
 
-        const {type, props} = element;
+        const { type, props } = element;
 
         const tag = document.createElement(type);
 
-        for(let child of props.children) {
+        for (const [propName, prop] of Object.entries(props)) {
+            if (propName !== 'children') {
+                tag.setAttribute(propName, prop);
+            }
+        }
+
+        for (let child of props.children) {
             const childVdom = instantiateDOMComponent(child);
             childVdom.mountComponent(tag);
         }
@@ -28,15 +52,15 @@ class DOMComponent {
 class DOMCompositeComponent {
     constructor(element) {
         this.element = element;
-        this.instance = null; 
+        this.instance = null;
     }
 
     mountComponent(parentNode) {
-        const {element} = this;
+        const { element } = this;
 
-        const {type: Component, props} = element;
+        const { type: Component, props } = element;
 
-        const instance = this.instance = new Component();
+        const instance = (this.instance = new Component());
 
         const vdom = instantiateDOMComponent(instance.render());
 
@@ -47,19 +71,13 @@ class DOMCompositeComponent {
 function SandElement(type, key, props) {
     this.type = type;
     this.key = key;
-    this.props = props;
+    this.props = props || {};
 }
 
 class Component {
-    constructor(props) {
-
-    }
-    setState() {
-
-    }
-    render() {
-
-    }
+    constructor(props) {}
+    setState() {}
+    render() {}
 }
 function instantiateDOMComponent(node) {
     if (typeof node === "string" || typeof node === "number") {
@@ -80,8 +98,12 @@ function render(element, container) {
     vdom.mountComponent(container);
 }
 
-function createElement(tag, props, children) {
-    props = props || {};
-    props.children = children;
-    return new SandElement(tag, null, props);
+function createElement(tag, config, children) {
+    config = config || {};
+
+    const key = config.key || null;
+    const props = omit(config, ["key"]);
+    props.children = Array.isArray(children) ? children : [];
+
+    return new SandElement(tag, key, props);
 }

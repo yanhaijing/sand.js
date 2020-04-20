@@ -222,9 +222,34 @@ function SandElement(type, key, props) {
 class Component {
     constructor(props) {
         this.props = props;
+        this.cacheStates = [];
+        this.setStateCallbacks = [];
     }
-    setState(newState) {
-        this._reactInternalInstance.receiveComponent(newState);
+    setState(newState, cb) {
+        const {cacheStates} = this;
+        
+        cacheStates.push(newState);
+        if (typeof cb === 'function') {
+            this.setStateCallbacks.push(cb);
+        }
+
+        // 非首次setState
+        if (cacheStates.length > 1) {
+            return;
+        }
+
+        setTimeout(() => {
+            // 合并state
+            const newState = cacheStates.reduce((res, cur) => ({...res, ...cur}), {});
+            this._reactInternalInstance.receiveComponent(newState);
+
+            this.setStateCallbacks.forEach(cb => {
+                cb(newState);
+            });
+            
+            this.cacheStates = [];
+            this.setStateCallbacks = [];
+        }, 0);
     }
     render() {}
 }

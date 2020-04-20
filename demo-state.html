@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>demo</title>
+        <style>
+            .div11 {
+                background: red;
+            }
+            .div12 {
+                background: green;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>demo</h1>
+        <div id="container"></div>
+        <script src="sand.js"></script>
+        <script>
+            class MyC extends Component {
+                constructor(props) {
+                    super(props);
+                    this.state = { number: 1 };
+
+                    this.onAdd = this.onAdd.bind(this);
+                }
+                onAdd() {
+                    console.log('onAdd');
+                    this.setState({
+                        number: this.state.number + 1,
+                    }, state => {
+                        console.log('setState, cb1', state)
+                    });
+                    this.setState({
+                        number: this.state.number + 2,
+                    }, state => {
+                        console.log('setState, cb2', state)
+                    });
+                }
+                render() {
+                    const { number } = this.state;
+                    
+                    console.log('render', number);
+                    return createElement(
+                        "div",
+                        { id: "div1", class: "div1" + number },
+                        [
+                            createElement("span", null, ["hello"]),
+                            createElement("span", null, ["world"]),
+                            createElement("span", null, [number]),
+                            createElement("div", null, [
+                                createElement(
+                                    "button",
+                                    { onClick: this.onAdd },
+                                    ["增加"]
+                                ),
+                            ]),
+                        ]
+                    );
+                }
+            }
+
+            render(
+                createElement(MyC, null, []),
+                document.getElementById("container")
+            );
+        </script>
+    </body>
+</html>

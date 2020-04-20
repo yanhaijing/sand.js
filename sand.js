@@ -79,7 +79,7 @@ class DOMComponent {
         const curProps = element.props;
 
         const mixProps = omit({ ...curProps, ...nextProps }, ["children"]);
-        console.log('receiveComponent',nextElement.type, curProps, nextProps);
+        // console.log('receiveComponent',nextElement.type, curProps, nextProps);
 
         this.element = nextElement;
 
@@ -124,7 +124,7 @@ class DOMComponent {
 
             const prevChild = curChildrenMap[key];
 
-            if (prevChild) {
+            if (prevChild && prevChild.child.type === child.type) {
                 const childvdom = childVdoms[prevChild.index];
 
                 childvdom.receiveComponent(child);
@@ -225,7 +225,6 @@ class Component {
     }
     setState(newState) {
         this._reactInternalInstance.receiveComponent(newState);
-        // console.log("Component setState", newState, this.state);
     }
     render() {}
 }

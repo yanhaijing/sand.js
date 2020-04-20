@@ -16,6 +16,9 @@ function pick(obj, keys) {
         }, {});
 }
 
+function propName2eventName(propName) {
+    return propName.replace(/^on/, '').toLowerCase();
+}
 class DOMTextComponent {
     constructor(text) {
         this.text = text;
@@ -55,10 +58,8 @@ class DOMComponent {
                 break;
             }
             // 事件
-            if ((/^on[A-Za-z]/.test(propName)) ) {
-                tag.addEventListener(propName.replace(/^on/, '').toLowerCase(), (event) => {
-                    prop(event);
-                }, false);
+            if ((/^on[A-Za-z]/.test(propName))) {
+                tag.addEventListener(propName2eventName(propName), prop);
             } else {
                 tag.setAttribute(propName, prop);
             }
@@ -85,19 +86,32 @@ class DOMComponent {
 
         // 更新属性
         for (let [propName, prop] of Object.entries(mixProps)) {
-            // 需要出的属性
+            // 需要移除的属性
             if (!nextProps[propName]) {
-                vdom.removeAttribute(propName);
+                if ((/^on[A-Za-z]/.test(propName))) {
+                    vdom.removeEventListener(propName2eventName(propName), prop);
+                } else {
+                    vdom.removeAttribute(propName);
+                }
             }
 
             // 新增加的属性
             if (!curProps[propName]) {
-                vdom.setAttribute(propName, prop);
+                if ((/^on[A-Za-z]/.test(propName))) {
+                    vdom.addEventListener(propName2eventName(propName), prop);
+                } else {
+                    vdom.setAttribute(propName, prop);
+                }
             }
 
             // 要更新的属性
             if (curProps[propName] !== nextProps[propName]) {
-                vdom.setAttribute(propName, prop);
+                if ((/^on[A-Za-z]/.test(propName))) {
+                    vdom.removeEventListener(propName2eventName(propName), curProps[propName]);
+                    vdom.addEventListener(propName2eventName(propName), prop);
+                } else {
+                    vdom.setAttribute(propName, prop);
+                }
             }
         }
 

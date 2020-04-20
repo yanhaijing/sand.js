@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>demo</title>
+        <style>
+            .div11 {
+                background: red;
+            }
+            .div12 {
+                background: green;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>demo</h1>
+        <div id="container"></div>
+        <script src="sand.js"></script>
+        <script>
+            class MyC extends Component {
+                constructor(props) {
+                    super(props);
+                    this.state = { number: 0 };
+
+                    this.onAdd = this.onAdd.bind(this);
+                    this.onDel = this.onDec.bind(this);
+
+                    this.onTest1 = () => {
+                        console.log(1);
+                    };
+                    this.onTest2 = () => {
+                        console.log(2);
+                    };
+                    this.onTest3 = () => {
+                        console.log(3);
+                    };
+
+                    this.testlist = [this.onTest1, this.onTest2, this.onTest3];
+                }
+                onAdd() {
+                    this.setState({
+                        number: (this.state.number + 1) % 3,
+                    });
+                }
+                onDec() {
+                    this.setState({
+                        number: -1,
+                    });
+                }
+                render() {
+                    const { number } = this.state;
+                    return createElement("div", { id: "div1", class: "div1" }, [
+                        createElement("div", null, [
+                            createElement(
+                                "button",
+                                {
+                                    onClick:
+                                        number === -1
+                                            ? undefined
+                                            : this.testlist[number],
+                                },
+                                ["点击测试log"]
+                            ),
+                            createElement("button", { onClick: this.onAdd }, [
+                                "下一个函数",
+                            ]),
+                            createElement("button", { onClick: this.onDel }, [
+                                "删除函数",
+                            ]),
+                        ]),
+                    ]);
+                }
+            }
+
+            render(
+                createElement(MyC, null, []),
+                document.getElementById("container")
+            );
+        </script>
+    </body>
+</html>

@@ -51,7 +51,15 @@ class DOMComponent {
         const tag = document.createElement(type);
 
         for (const [propName, prop] of Object.entries(props)) {
-            if (propName !== "children") {
+            if (propName === "children") {
+                break;
+            }
+            // 事件
+            if ((/^on[A-Za-z]/.test(propName)) ) {
+                tag.addEventListener(propName.replace(/^on/, '').toLowerCase(), (event) => {
+                    prop(event);
+                }, false);
+            } else {
                 tag.setAttribute(propName, prop);
             }
         }
@@ -71,6 +79,10 @@ class DOMComponent {
         const curProps = element.props;
 
         const mixProps = omit({ ...curProps, ...nextProps }, ["children"]);
+        console.log('receiveComponent',nextElement.type, curProps, nextProps);
+
+        this.element = nextElement;
+
         // 更新属性
         for (let [propName, prop] of Object.entries(mixProps)) {
             // 需要出的属性
@@ -104,6 +116,9 @@ class DOMComponent {
 
         let lastIndex = 0;
         let curIndex = 0;
+
+        this.childVdoms = [];
+
         for (const child of nextChildren) {
             const key = child.key || curIndex;
 
@@ -119,10 +134,12 @@ class DOMComponent {
                 } else {
                     lastIndex = prevChild.index;
                 }
+                this.childVdoms.push(childvdom);
             } else {
                 // 新增的节点
                 const childVdom = instantiateDOMComponent(child);
                 childVdom.mountComponent(vdom);
+                this.childVdoms.push(childVdom);
             }
 
             curIndex = curIndex + 1;
@@ -130,14 +147,14 @@ class DOMComponent {
         // 删除用不到的节点
         for (const map of Object.values(curChildrenMap)) {
             if (!map.used) {
-                map.child.unmountComponent();
+                childVdoms[map.index].unmountComponent()
             }
         }
     }
     unmountComponent() {
-        const { parentNode, element, vdom } = this;
+        const { parentNode, childVdoms, vdom } = this;
 
-        for (const child of element.props.children) {
+        for (const child of childVdoms) {
             child.unmountComponent();
         }
 
@@ -207,9 +224,8 @@ class Component {
         this.props = props;
     }
     setState(newState) {
-        console.log("Component setState", newState);
-
         this._reactInternalInstance.receiveComponent(newState);
+        // console.log("Component setState", newState, this.state);
     }
     render() {}
 }

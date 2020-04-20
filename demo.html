@@ -11,7 +11,7 @@
             .div12 {
                 background: green;
             }
-        </style>    
+        </style>
     </head>
     <body>
         <h1>demo</h1>
@@ -20,18 +20,45 @@
         <script>
             class MyC extends Component {
                 constructor(props) {
-                    super(props)
+                    super(props);
                     this.state = { number: 1 };
 
-                    setTimeout(() => this.setState({number: 2}), 1000);
+                    this.onAdd = this.onAdd.bind(this);
+                    this.onDec = this.onDec.bind(this);
+                }
+                onAdd() {
+                    this.setState({
+                        number: this.state.number + 1,
+                    });
+                }
+                onDec() {
+                    this.setState({
+                        number: this.state.number - 1,
+                    });
                 }
                 render() {
                     const { number } = this.state;
-                    return createElement("div", { id: "div1", class: "div1"+number }, [
-                        createElement("span", null, ["hello"]),
-                        createElement("span", null, ["world"]),
-                        createElement("span", null, [number]),
-                    ]);
+                    return createElement(
+                        "div",
+                        { id: "div1", class: "div1" + number },
+                        [
+                            createElement("span", null, ["hello"]),
+                            createElement("span", null, ["world"]),
+                            createElement("span", null, [number]),
+                            createElement("div", null, [
+                                createElement(
+                                    "button",
+                                    { onClick: this.onAdd },
+                                    ["增加"]
+                                ),
+                                createElement(
+                                    "button",
+                                    { onClick: this.onDec },
+                                    ["减少"]
+                                ),
+                            ]),
+                        ]
+                    );
                 }
             }
 

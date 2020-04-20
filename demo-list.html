@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>demo-list</title>
+        <style>
+            .div11 {
+                background: red;
+            }
+            .div12 {
+                background: green;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>demo-list</h1>
+        <div id="container"></div>
+        <script src="sand.js"></script>
+        <script>
+            class MyC extends Component {
+                constructor(props) {
+                    super(props);
+                    this.state = { list: [] };
+
+                    this.onAdd = this.onAdd.bind(this);
+                    this.onDel = this.onDel.bind(this);
+                    this.onAdjustOrder = this.onAdjustOrder.bind(this);
+                    this.onCheckboxChange = this.onCheckboxChange.bind(this);
+                }
+                onAdd() {
+                    const list = [...this.state.list];
+
+                    this.setState({
+                        list: [
+                            ...list,
+                            { text: list.length + 1, checked: false },
+                        ],
+                    });
+                }
+                onDel(index = this.state.list.length - 1) {
+                    console.log('onDel', index);
+                    const list = this.state.list.filter(
+                        (item, key) => index !== key
+                    );
+                    this.setState({ list });
+                }
+                onAdjustOrder() {
+                    const list = [...this.state.list].reverse();
+
+                    this.setState({ list });
+                }
+                onCheckboxChange(event) {
+                    console.log("onCheckboxChange", event);
+                }
+                render() {
+                    return createElement("div", { id: "div1", class: "div1" }, [
+                        createElement(
+                            "div",
+                            null,
+                            this.state.list.map((item, index) =>
+                                createElement("div", null, [
+                                    item.text,
+                                    createElement("input", {
+                                        type: "checkbox",
+                                        checked: item.checked,
+                                        onChange: this.onCheckboxChange,
+                                    }),
+                                    createElement(
+                                        "button",
+                                        { onClick: () => this.onDel(index) },
+                                        ["删除"]
+                                    ),
+                                ])
+                            )
+                        ),
+                        createElement("div", null, [
+                            createElement("button", { onClick: this.onAdd }, [
+                                "增加",
+                            ]),
+                            createElement("button", { onClick: () => this.onDel() }, [
+                                "减少",
+                            ]),
+                            createElement(
+                                "button",
+                                { onClick: this.onAdjustOrder },
+                                ["洗牌"]
+                            ),
+                        ]),
+                    ]);
+                }
+            }
+
+            render(
+                createElement(MyC, null, []),
+                document.getElementById("container")
+            );
+        </script>
+    </body>
+</html>

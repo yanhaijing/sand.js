@@ -17,31 +17,70 @@ function pick(obj, keys) {
 }
 
 function propName2eventName(propName) {
-    return propName.replace(/^on/, '').toLowerCase();
+    return propName.replace(/^on/, "").toLowerCase();
 }
-
 function dash2camel(str) {
-    return str.replace(/-([a-zA-Z])/g, (match, p1) => p1.toUpperCase());
+    return str.replace(/-([a-zA-Z])/g, (match, p1, offset) =>
+        offset === 0 ? p1.toLowerCase() : p1.toUpperCase()
+    );
 }
 
-function setDataset(dom, key, value) {
-    const datasetKey = dash2camel(key.replace(/^data-/, ''));
-
-    if (dom.dataset) {
-        dom.dataset[datasetKey] = value;
+function setStyle(style, key, value) {
+    key = dash2camel(key);
+    if (value == null) {
+        style[key] = "";
     } else {
-        dom.setAttribute(key, value)
+        style[key] = value;
     }
 }
-function delDataset(dom, key) {
-    const datasetKey = dash2camel(key.replace(/^data-/, ''));
 
-    if (dom.dataset) {
-        delete dom.dataset[datasetKey];
+function setProp(dom, name, value, oldValue) {
+    if (name === "style") {
+        style = dom.style;
+
+        if (typeof value === "string") {
+            style.cssText = value;
+        } else {
+            if (typeof oldValue === "string") {
+                style.cssText = "";
+            } else {
+                oldValue = oldValue || {};
+                value = value || {};
+
+                for (const key of Object.keys(oldValue)) {
+                    if (!(key in value)) {
+                        setStyle(s, key, "");
+                    }
+                }
+
+                for (const key of Object.keys(value)) {
+                    if (value[key] !== oldValue[key]) {
+                        setStyle(s, i, value[key]);
+                    }
+                }
+            }
+        }
+    } else if (
+        ["selected", "selectedIndex", "checked", "value"].indexOf(name) !==
+            -1 &&
+        name in dom
+    ) {
+        dom[name] = value;
     } else {
-        dom.removeAttribute(key);
+        // 处理className和htmlFor
+        if (name === "className") {
+            name = "class";
+        } else if (name === "htmlFor") {
+            name = "for";
+        }
+        if (value == null || value === false) {
+            dom.removeAttribute(name);
+        } else {
+            dom.setAttribute(name, value);
+        }
     }
 }
+
 class DOMTextComponent {
     constructor(text) {
         this.text = text;
@@ -69,6 +108,45 @@ class DOMComponent {
         this.vdom = null;
         this.childVdoms = [];
     }
+    diffProps(vdom, curProps, nextProps) {
+        const mixProps = omit({ ...curProps, ...nextProps }, ["children"]);
+        // 更新属性
+        for (let [propName, prop] of Object.entries(mixProps)) {
+            // 需要移除的属性
+            if (!nextProps[propName]) {
+                if (/^on[A-Za-z]/.test(propName)) {
+                    vdom.removeEventListener(
+                        propName2eventName(propName),
+                        prop
+                    );
+                } else {
+                    setProp(vdom, propName)
+                }
+            }
+
+            // 新增加的属性
+            if (!curProps[propName]) {
+                if (/^on[A-Za-z]/.test(propName)) {
+                    vdom.addEventListener(propName2eventName(propName), prop);
+                } else {
+                    setProp(vdom, propName, prop);
+                }
+            }
+
+            // 要更新的属性
+            if (curProps[propName] !== nextProps[propName]) {
+                if (/^on[A-Za-z]/.test(propName)) {
+                    vdom.removeEventListener(
+                        propName2eventName(propName),
+                        curProps[propName]
+                    );
+                    vdom.addEventListener(propName2eventName(propName), prop);
+                } else {
+                    setProp(vdom, propName, prop)
+                }
+            }
+        }
+    }
     mountComponent(parentNode) {
         const { element } = this;
 
@@ -81,7 +159,7 @@ class DOMComponent {
                 break;
             }
             // 事件
-            if ((/^on[A-Za-z]/.test(propName))) {
+            if (/^on[A-Za-z]/.test(propName)) {
                 tag.addEventListener(propName2eventName(propName), prop);
             } else {
                 tag.setAttribute(propName, prop);
@@ -102,41 +180,9 @@ class DOMComponent {
         const nextProps = nextElement.props;
         const curProps = element.props;
 
-        const mixProps = omit({ ...curProps, ...nextProps }, ["children"]);
-        // console.log('receiveComponent',nextElement.type, curProps, nextProps);
-
         this.element = nextElement;
 
-        // 更新属性
-        for (let [propName, prop] of Object.entries(mixProps)) {
-            // 需要移除的属性
-            if (!nextProps[propName]) {
-                if ((/^on[A-Za-z]/.test(propName))) {
-                    vdom.removeEventListener(propName2eventName(propName), prop);
-                } else {
-                    vdom.removeAttribute(propName);
-                }
-            }
-
-            // 新增加的属性
-            if (!curProps[propName]) {
-                if ((/^on[A-Za-z]/.test(propName))) {
-                    vdom.addEventListener(propName2eventName(propName), prop);
-                } else {
-                    vdom.setAttribute(propName, prop);
-                }
-            }
-
-            // 要更新的属性
-            if (curProps[propName] !== nextProps[propName]) {
-                if ((/^on[A-Za-z]/.test(propName))) {
-                    vdom.removeEventListener(propName2eventName(propName), curProps[propName]);
-                    vdom.addEventListener(propName2eventName(propName), prop);
-                } else {
-                    vdom.setAttribute(propName, prop);
-                }
-            }
-        }
+        this.diffProps(vdom, curProps, nextProps);
 
         const nextChildren = nextProps.children;
         const curChildren = curProps.children;
@@ -184,7 +230,7 @@ class DOMComponent {
         // 删除用不到的节点
         for (const map of Object.values(curChildrenMap)) {
             if (!map.used) {
-                childVdoms[map.index].unmountComponent()
+                childVdoms[map.index].unmountComponent();
             }
         }
     }

@@ -21,7 +21,12 @@
             class MyC extends Component {
                 constructor(props) {
                     super(props);
-                    this.state = { list: [] };
+                    this.state = {
+                        list: [
+                            { text: 1, checked: true },
+                            { text: 2, checked: true },
+                        ],
+                    };
 
                     this.onAdd = this.onAdd.bind(this);
                     this.onDel = this.onDel.bind(this);
@@ -31,15 +36,20 @@
                 onAdd() {
                     const list = [...this.state.list];
 
-                    this.setState({
-                        list: [
-                            ...list,
-                            { text: list.length + 1, checked: false },
-                        ],
-                    });
+                    this.setState(
+                        {
+                            list: [
+                                ...list,
+                                { text: list.length + 1, checked: false },
+                            ],
+                        },
+                        (state) => {
+                            console.log("onAdd", state.list);
+                        }
+                    );
                 }
                 onDel(index = this.state.list.length - 1) {
-                    console.log('onDel', index);
+                    console.log("onDel", index);
                     const list = this.state.list.filter(
                         (item, key) => index !== key
                     );
@@ -59,7 +69,7 @@
                             "div",
                             null,
                             this.state.list.map((item, index) =>
-                                createElement("div", null, [
+                                createElement("div", { key: item.key }, [
                                     item.text,
                                     createElement("input", {
                                         type: "checkbox",
@@ -74,13 +84,15 @@
                                 ])
                             )
                         ),
-                        createElement("div", null, [
+                        createElement("div", { style: { marginTop: "20px" } }, [
                             createElement("button", { onClick: this.onAdd }, [
                                 "增加",
                             ]),
-                            createElement("button", { onClick: () => this.onDel() }, [
-                                "减少",
-                            ]),
+                            createElement(
+                                "button",
+                                { onClick: () => this.onDel() },
+                                ["减少"]
+                            ),
                             createElement(
                                 "button",
                                 { onClick: this.onAdjustOrder },

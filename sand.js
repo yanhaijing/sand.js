@@ -49,13 +49,13 @@ function setProp(dom, name, value, oldValue) {
 
                 for (const key of Object.keys(oldValue)) {
                     if (!(key in value)) {
-                        setStyle(s, key, "");
+                        setStyle(style, key, "");
                     }
                 }
 
                 for (const key of Object.keys(value)) {
                     if (value[key] !== oldValue[key]) {
-                        setStyle(s, i, value[key]);
+                        setStyle(style, key, value[key]);
                     }
                 }
             }
@@ -110,6 +110,7 @@ class DOMComponent {
     }
     diffProps(vdom, curProps, nextProps) {
         const mixProps = omit({ ...curProps, ...nextProps }, ["children"]);
+
         // 更新属性
         for (let [propName, prop] of Object.entries(mixProps)) {
             // 需要移除的属性
@@ -120,7 +121,7 @@ class DOMComponent {
                         prop
                     );
                 } else {
-                    setProp(vdom, propName)
+                    setProp(vdom, propName);
                 }
             }
 
@@ -142,51 +143,13 @@ class DOMComponent {
                     );
                     vdom.addEventListener(propName2eventName(propName), prop);
                 } else {
-                    setProp(vdom, propName, prop)
+                    setProp(vdom, propName, prop);
                 }
             }
         }
     }
-    mountComponent(parentNode) {
-        const { element } = this;
-
-        const { type, props } = element;
-
-        const tag = document.createElement(type);
-
-        for (const [propName, prop] of Object.entries(props)) {
-            if (propName === "children") {
-                break;
-            }
-            // 事件
-            if (/^on[A-Za-z]/.test(propName)) {
-                tag.addEventListener(propName2eventName(propName), prop);
-            } else {
-                tag.setAttribute(propName, prop);
-            }
-        }
-
-        for (let child of props.children) {
-            const childVdom = instantiateDOMComponent(child);
-            childVdom.mountComponent(tag);
-            this.childVdoms.push(childVdom);
-        }
-        parentNode.appendChild(tag);
-        this.parentNode = parentNode;
-        this.vdom = tag;
-    }
-    receiveComponent(nextElement) {
-        const { parentNode, element, vdom, childVdoms } = this;
-        const nextProps = nextElement.props;
-        const curProps = element.props;
-
-        this.element = nextElement;
-
-        this.diffProps(vdom, curProps, nextProps);
-
-        const nextChildren = nextProps.children;
-        const curChildren = curProps.children;
-
+    diffChildren(vdom, curChildren, nextChildren) {
+        const { childVdoms } = this;
         const curChildrenMap = curChildren.reduce((map, child, index) => {
             const key = child.key || index;
             map[key] = {
@@ -213,7 +176,7 @@ class DOMComponent {
                 childvdom.receiveComponent(child);
                 prevChild.used = true;
                 if (prevChild.index < lastIndex) {
-                    parentNode.appendChild(childvdom);
+                    vdom.appendChild(childvdom.vdom);
                 } else {
                     lastIndex = prevChild.index;
                 }
@@ -233,6 +196,47 @@ class DOMComponent {
                 childVdoms[map.index].unmountComponent();
             }
         }
+    }
+    mountComponent(parentNode) {
+        const { element } = this;
+
+        const { type, props } = element;
+
+        const tag = document.createElement(type);
+
+        for (const [propName, prop] of Object.entries(props)) {
+            if (propName === "children") {
+                break;
+            }
+            // 事件
+            if (/^on[A-Za-z]/.test(propName)) {
+                tag.addEventListener(propName2eventName(propName), prop);
+            } else {
+                setProp(tag, propName, prop)
+            }
+        }
+
+        for (let child of props.children) {
+            const childVdom = instantiateDOMComponent(child);
+            childVdom.mountComponent(tag);
+            this.childVdoms.push(childVdom);
+        }
+        parentNode.appendChild(tag);
+        this.parentNode = parentNode;
+        this.vdom = tag;
+    }
+    receiveComponent(nextElement) {
+        const { element, vdom } = this;
+        const nextProps = nextElement.props;
+        const curProps = element.props;
+
+        this.element = nextElement;
+
+        this.diffProps(vdom, curProps, nextProps);
+
+        const nextChildren = nextProps.children;
+        const curChildren = curProps.children;
+        this.diffChildren(vdom, curChildren, nextChildren);
     }
     unmountComponent() {
         const { parentNode, childVdoms, vdom } = this;

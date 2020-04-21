@@ -19,6 +19,29 @@ function pick(obj, keys) {
 function propName2eventName(propName) {
     return propName.replace(/^on/, '').toLowerCase();
 }
+
+function dash2camel(str) {
+    return str.replace(/-([a-zA-Z])/g, (match, p1) => p1.toUpperCase());
+}
+
+function setDataset(dom, key, value) {
+    const datasetKey = dash2camel(key.replace(/^data-/, ''));
+
+    if (dom.dataset) {
+        dom.dataset[datasetKey] = value;
+    } else {
+        dom.setAttribute(key, value)
+    }
+}
+function delDataset(dom, key) {
+    const datasetKey = dash2camel(key.replace(/^data-/, ''));
+
+    if (dom.dataset) {
+        delete dom.dataset[datasetKey];
+    } else {
+        dom.removeAttribute(key);
+    }
+}
 class DOMTextComponent {
     constructor(text) {
         this.text = text;

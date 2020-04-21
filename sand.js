@@ -263,10 +263,10 @@ class Component {
         this.setStateCallbacks = [];
     }
     setState(newState, cb) {
-        const {cacheStates} = this;
-        
+        const { cacheStates } = this;
+
         cacheStates.push(newState);
-        if (typeof cb === 'function') {
+        if (typeof cb === "function") {
             this.setStateCallbacks.push(cb);
         }
 
@@ -277,13 +277,16 @@ class Component {
 
         setTimeout(() => {
             // 合并state
-            const newState = cacheStates.reduce((res, cur) => ({...res, ...cur}), {});
+            const newState = cacheStates.reduce(
+                (res, cur) => ({ ...res, ...cur }),
+                {}
+            );
             this._reactInternalInstance.receiveComponent(newState);
 
-            this.setStateCallbacks.forEach(cb => {
+            this.setStateCallbacks.forEach((cb) => {
                 cb(newState);
             });
-            
+
             this.cacheStates = [];
             this.setStateCallbacks = [];
         }, 0);

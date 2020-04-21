@@ -8,6 +8,12 @@
     <body>
         <input type="text" value="123" id="text" class="text" />
         <input type="radio" value="123" id="radio" class="text" />
+        <select name="select" id="select">
+            <option>Option B</option>
+            <option>Option C</option>
+            <option>Option D</option>
+            <option id="option">Option E</option>
+        </select>
 
         <script>
             function log(prefix, attr, prop) {
@@ -16,7 +22,7 @@
                 );
             }
             function testAttrProp(dom, attrName, propName, attrpropList) {
-                dom = dom.cloneNode(true) // 复制一份，不影响下次测试
+                dom = dom.cloneNode(true); // 复制一份，不影响下次测试
                 console.log(
                     `====================== [${attrName}] [${propName}]`
                 );
@@ -26,7 +32,11 @@
                 log(`init`, attr, prop);
 
                 for (const { attrValue, propValue } of attrpropList) {
-                    dom.setAttribute(attrName, attrValue);
+                    if (attrValue === false) {
+                        dom.removeAttribute(attrName);
+                    } else {
+                        dom.setAttribute(attrName, attrValue);
+                    }
                     attr = dom.getAttribute(attrName);
                     prop = dom[propName];
                     log(`setAttribute`, attr, prop);
@@ -40,38 +50,91 @@
 
             const input = document.getElementById("text");
 
-            // attr = prop
+            // a <-> b 双向同步
+            // a -> b a同步到b
+            // a <- b b同步到a
+            // a - b a和b不同步
+
+            // attr <-> prop
             testAttrProp(input, "class", "className", [
                 { attrValue: "attr", propValue: "prop" },
             ]);
-            // attr = prop
+            // attr <-> prop
             testAttrProp(input, "id", "id", [
                 { attrValue: "attr", propValue: "prop" },
             ]);
 
             // need prop
+            // unset prop attr -> prop
+            // set prop attr - prop
             testAttrProp(input, "value", "value", [
                 { attrValue: "attr", propValue: "prop" },
                 { attrValue: 111, propValue: 222 },
             ]);
 
             // need prop
+            // 合法值 attr <-> prop
+            // 非法值，prop会被设置为text attr <- prop 
             testAttrProp(input, "type", "type", [
                 { attrValue: "checkbox", propValue: "radio" },
                 { attrValue: "attr", propValue: "prop" },
             ]);
 
             // need prop
-            const radio = document.getElementById("radio");
-            testAttrProp(radio, "checked", "checked", [
+            // unset prop attr -> prop
+            // set prop attr - prop
+            testAttrProp(input, "readonly", "readOnly", [
                 { attrValue: true, propValue: false },
-                { attrValue: true, propValue: false },
+                { attrValue: false, propValue: true },
+                { attrValue: false, propValue: true },
             ]);
 
             // need prop
+            // unset prop attr -> prop
+            // set prop attr - prop
+            const radio = document.getElementById("radio");
+            testAttrProp(radio, "checked", "checked", [
+                { attrValue: true, propValue: false },
+                { attrValue: false, propValue: true },
+                { attrValue: false, propValue: true },
+            ]);
+
+            // need prop
+            // set true attr <-> prop
+            // false 时需要 removeAttribute attr <-> prop
             testAttrProp(radio, "disabled", "disabled", [
                 { attrValue: true, propValue: false },
+                { attrValue: false, propValue: true },
+                { attrValue: false, propValue: true },
+            ]);
+
+            const select = document.getElementById("select");
+            // need prop
+            // unset prop attr -> prop
+            // set prop attr - prop
+            testAttrProp(select, "selectedIndex", "selectedIndex", [
+                { attrValue: 0, propValue: 1 },
+                { attrValue: 2, propValue: 3 },
+            ]);
+            
+            // need prop
+            // set true attr <-> prop
+            // false 时需要 removeAttribute attr <-> prop
+            testAttrProp(select, "required", "required", [
                 { attrValue: true, propValue: false },
+                { attrValue: false, propValue: true },
+                { attrValue: false, propValue: true },
+            ]);
+
+            const option = document.getElementById("option");
+
+            // need prop
+            // unset prop attr -> prop
+            // set prop attr - prop
+            testAttrProp(select, "selected", "selected", [
+                { attrValue: true, propValue: false },
+                { attrValue: false, propValue: true },
+                { attrValue: false, propValue: true },
             ]);
         </script>
     </body>

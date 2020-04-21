@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <input type="text" value="123" id="text" class="text" />
+        <input type="radio" value="123" id="radio" class="text" />
+
+        <script>
+            function log(prefix, attr, prop) {
+                console[attr === prop ? "log" : "warn"](
+                    `${prefix}: attr: [${attr}]<${typeof attr}>; prop: [${prop}]<${typeof prop}>`
+                );
+            }
+            function testAttrProp(dom, attrName, propName, attrpropList) {
+                dom = dom.cloneNode(true) // 复制一份，不影响下次测试
+                console.log(
+                    `====================== [${attrName}] [${propName}]`
+                );
+
+                let attr = dom.getAttribute(attrName);
+                let prop = dom[propName];
+                log(`init`, attr, prop);
+
+                for (const { attrValue, propValue } of attrpropList) {
+                    dom.setAttribute(attrName, attrValue);
+                    attr = dom.getAttribute(attrName);
+                    prop = dom[propName];
+                    log(`setAttribute`, attr, prop);
+
+                    dom[propName] = propValue;
+                    attr = dom.getAttribute(attrName);
+                    prop = dom[propName];
+                    log(`[propName]=`, attr, prop);
+                }
+            }
+
+            const input = document.getElementById("text");
+
+            // attr = prop
+            testAttrProp(input, "class", "className", [
+                { attrValue: "attr", propValue: "prop" },
+            ]);
+            // attr = prop
+            testAttrProp(input, "id", "id", [
+                { attrValue: "attr", propValue: "prop" },
+            ]);
+
+            // need prop
+            testAttrProp(input, "value", "value", [
+                { attrValue: "attr", propValue: "prop" },
+                { attrValue: 111, propValue: 222 },
+            ]);
+
+            // need prop
+            testAttrProp(input, "type", "type", [
+                { attrValue: "checkbox", propValue: "radio" },
+                { attrValue: "attr", propValue: "prop" },
+            ]);
+
+            // need prop
+            const radio = document.getElementById("radio");
+            testAttrProp(radio, "checked", "checked", [
+                { attrValue: true, propValue: false },
+                { attrValue: true, propValue: false },
+            ]);
+
+            // need prop
+            testAttrProp(radio, "disabled", "disabled", [
+                { attrValue: true, propValue: false },
+                { attrValue: true, propValue: false },
+            ]);
+        </script>
+    </body>
+</html>

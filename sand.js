@@ -317,7 +317,51 @@ class DOMCompositeComponent {
 }
 
 class DOMFunctionComponent {
+    constructor(element) {
+        this.element = element;
+        this.instance = null;
+        this.parentNode = null;
+        this.vdom = null;
+        this.renderedElement = null;
+    }
 
+    mountComponent(parentNode) {
+        const { element } = this;
+
+        const { type: Component, props } = element;
+
+        const nextElement = Component(props);
+        this.renderedElement = nextElement;
+
+        const vdom = instantiateDOMComponent(nextElement);
+
+        vdom.mountComponent(parentNode);
+        this.parentNode = parentNode;
+        this.vdom = vdom;
+
+    }
+    receiveComponent(newState) {
+        const { element, parentNode, renderedElement, vdom } = this;
+
+        const { type: Component } = element;
+        const nextProps = element.props;
+
+        const nextElement = Component(nextProps);
+        this.renderedElement = nextElement;
+
+        if (renderedElement.type === nextElement.type) {
+            vdom.receiveComponent(nextElement);
+        } else {
+            vdom.unmountComponent();
+            const nextVdom = instantiateDOMComponent(nextElement);
+            nextVdom.mountComponent(parentNode);
+            this.vdom = nextVdom;
+        }
+    }
+    unmountComponent() {
+        const { vdom } = this;
+        vdom.unmountComponent();
+    }
 }
 
 function SandElement(type, key, props) {
@@ -398,7 +442,11 @@ function instantiateDOMComponent(node) {
     }
 
     if (typeof node === "object" && typeof node.type === "function") {
-        return new DOMCompositeComponent(node);
+        if (node.type.prototype instanceof Component) {
+            return new DOMCompositeComponent(node);
+        }
+
+        return new DOMFunctionComponent(node);
     }
 }
 

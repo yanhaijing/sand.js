@@ -19,6 +19,7 @@ function pick(obj, keys) {
 function propName2eventName(propName) {
     return propName.replace(/^on/, "").toLowerCase();
 }
+
 function dash2camel(str) {
     return str.replace(/-([a-zA-Z])/g, (match, p1, offset) =>
         offset === 0 ? p1.toLowerCase() : p1.toUpperCase()
@@ -248,6 +249,7 @@ class DOMComponent {
         parentNode.removeChild(vdom);
     }
 }
+
 class DOMCompositeComponent {
     constructor(element) {
         this.element = element;
@@ -298,6 +300,10 @@ class DOMCompositeComponent {
         const { vdom } = this;
         vdom.unmountComponent();
     }
+}
+
+class DOMFunctionComponent {
+
 }
 
 function SandElement(type, key, props) {
@@ -367,6 +373,7 @@ class Component {
     }
     render() {}
 }
+
 function instantiateDOMComponent(node) {
     if (typeof node === "string" || typeof node === "number") {
         return new DOMTextComponent(node);

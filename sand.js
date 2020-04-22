@@ -341,6 +341,30 @@ class Component {
             this.setStateCallbacks = [];
         }, 0);
     }
+    shouldComponentUpdate(nextProps, nextState) {
+        return true;
+    }
+    componentWillMount() {
+
+    }
+    componentDidMount() {
+
+    }
+    componentWillUnmount() {
+
+    }
+    componentWillReceiveProps(newProps) {
+
+    }
+    componentWillUpdate() {
+        
+    }
+    componentDidUpdate() {
+
+    }
+    forceUpdate() {
+        
+    }
     render() {}
 }
 function instantiateDOMComponent(node) {

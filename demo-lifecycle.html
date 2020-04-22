@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>demo</title>
+        <style>
+            .div11 {
+                background: red;
+            }
+            .div12 {
+                background: green;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>demo</h1>
+        <div id="container"></div>
+        <script src="sand.js"></script>
+        <script>
+            class Component2 extends Component {
+                componentWillMount() {
+                    console.log('Component2 componentWillMount')
+                }
+                componentDidMount() {
+                    console.log('Component2 componentDidMount')
+                }
+                componentWillUnmount() {
+                    console.log('Component2 componentWillUnmount')
+                }
+                componentWillReceiveProps(nextProps) {
+                    console.log('Component2 componentWillReceiveProps', nextProps)
+                }
+                shouldComponentUpdate(nextProps, newState) {
+                    console.log('Component2 shouldComponentUpdate', nextProps, newState)
+                }
+                componentWillUpdate() {
+                    console.log('Component2 componentWillUpdate')
+                }
+                componentDidUpdate() {
+                    console.log('Component2 componentDidUpdate')
+                }
+                render() {
+                    return createElement("div", null, [this.props.number]);
+                }
+            }
+            class Component1 extends Component {
+                constructor(props) {
+                    super(props);
+                    this.state = { number: 1 };
+
+                    this.onAdd = this.onAdd.bind(this);
+                }
+                componentWillMount() {
+                    console.log('Component1 componentWillMount')
+                }
+                componentDidMount() {
+                    console.log('Component1 componentDidMount')
+                }
+                onAdd() {
+                    this.setState({
+                        number: this.state.number + 1,
+                    });
+                }
+                render() {
+                    const { number } = this.state;
+                    return createElement(
+                        "div",
+                        { id: "div1", class: "div1" + number },
+                        [
+                            createElement(Component2, { number }),
+                            createElement("div", null, [
+                                createElement(
+                                    "button",
+                                    { onClick: this.onAdd },
+                                    ["增加"]
+                                ),
+                            ]),
+                        ]
+                    );
+                }
+            }
+
+            render(
+                createElement(Component1, null, []),
+                document.getElementById("container")
+            );
+        </script>
+    </body>
+</html>

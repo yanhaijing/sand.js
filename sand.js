@@ -264,18 +264,22 @@ class DOMCompositeComponent {
 
         const { type: Component, props } = element;
 
-        const instance = new Component();
+        const instance = new Component(props);
         instance._reactInternalInstance = this;
 
         this.instance = instance;
         const nextElement = instance.render();
         this.renderedElement = nextElement;
 
+        instance.componentWillMount();
+
         const vdom = instantiateDOMComponent(nextElement);
 
         vdom.mountComponent(parentNode);
         this.parentNode = parentNode;
         this.vdom = vdom;
+
+        instance.componentDidMount();
     }
     receiveComponent(newState) {
         const { instance, element, parentNode, renderedElement, vdom } = this;
@@ -287,6 +291,13 @@ class DOMCompositeComponent {
         const nextElement = instance.render();
         this.renderedElement = nextElement;
 
+        instance.componentWillReceiveProps(nextProps);
+
+        if (!instance.shouldComponentUpdate(nextProps, newState)) {
+            return;
+        }
+        instance.componentWillUpdate();
+
         if (renderedElement.type === nextElement.type) {
             vdom.receiveComponent(nextElement);
         } else {
@@ -295,9 +306,12 @@ class DOMCompositeComponent {
             nextVdom.mountComponent(parentNode);
             this.vdom = nextVdom;
         }
+
+        instance.componentDidUpdate();
     }
     unmountComponent() {
-        const { vdom } = this;
+        const { vdom, instance } = this;
+        instance.componentWillUnmount();
         vdom.unmountComponent();
     }
 }
@@ -347,9 +361,6 @@ class Component {
             this.setStateCallbacks = [];
         }, 0);
     }
-    shouldComponentUpdate(nextProps, nextState) {
-        return true;
-    }
     componentWillMount() {
 
     }
@@ -358,6 +369,9 @@ class Component {
     }
     componentWillUnmount() {
 
+    }
+    shouldComponentUpdate(nextProps, nextState) {
+        return true;
     }
     componentWillReceiveProps(newProps) {
 

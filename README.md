@@ -7,7 +7,7 @@
 [![NPM downloads](http://img.shields.io/npm/dm/sand.js.svg?style=flat-square)](http://www.npmtrends.com/sandjs)
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/yanhaijing/sand.js.svg)](http://isitmaintained.com/project/yanhaijing/sand.js "Percentage of issues still open")
 
-最好用的 `JS|TS` 第三方库脚手架
+Build the world with sand.js
 
 ## :star: 特性
 

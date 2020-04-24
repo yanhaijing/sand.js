@@ -11,8 +11,9 @@ export type VdomType =
 
 export class DOMTextComponent {
     text: string;
-    textNode: Text = null;
-    parentNode: HTMLElement = null;
+    textNode!: Text;
+    parentNode!: HTMLElement;
+    element!: SandElement;
 
     constructor(text?: string | number) {
         this.text = text == null ? "" : String(text);
@@ -25,8 +26,8 @@ export class DOMTextComponent {
         this.textNode = textNode;
         this.parentNode = parentNode;
     }
-    receiveComponent(text?: string) {
-        text = text == null ? "" : text;
+    receiveComponent(text?: string | number) {
+        text = text == null ? "" : String(text);
         if (text !== this.text) {
             this.textNode.textContent = text;
             this.text = text;
@@ -39,9 +40,11 @@ export class DOMTextComponent {
 
 export class DOMComponent {
     element: SandElement;
-    parentNode: HTMLElement = null; // 父元素dom节点
-    dom: HTMLElement = null; // 当前元素dom节点
+    parentNode!: HTMLElement; // 父元素dom节点
+    dom!: HTMLElement; // 当前元素dom节点
     childVdoms: VdomType[] = []; // 子元素虚拟dom节点
+    renderedElement!: SandElement;
+
     constructor(element: SandElement) {
         this.element = element;
     }
@@ -54,21 +57,32 @@ export class DOMComponent {
 
         diffProps(dom, { children: [] }, props); // 旧的属性设置为空，相当于全部设置为新的
 
-        this.childVdoms = diffChildren(dom, [], props.children, this.childVdoms); // 旧孩子设置为空，相当于全部设置为新的
+        this.childVdoms = diffChildren(
+            dom,
+            [],
+            props.children,
+            this.childVdoms
+        ); // 旧孩子设置为空，相当于全部设置为新的
 
         parentNode.appendChild(dom);
         this.parentNode = parentNode;
         this.dom = dom;
+        this.renderedElement = element;
     }
-    receiveComponent(nextElement: SandElement) {
-        const { element, dom } = this;
-        const nextProps = nextElement.props;
-        const curProps = element.props;
+    receiveComponent() {
+        const { element, dom, renderedElement } = this;
+        const nextProps = element.props;
+        const curProps = renderedElement.props;
 
-        this.element = nextElement;
+        this.renderedElement = element;
 
         diffProps(dom, curProps, nextProps);
-        this.childVdoms = diffChildren(dom, curProps.children, nextProps.children, this.childVdoms);
+        this.childVdoms = diffChildren(
+            dom,
+            curProps.children,
+            nextProps.children,
+            this.childVdoms
+        );
     }
     unmountComponent() {
         const { parentNode, childVdoms, dom } = this;
@@ -83,10 +97,11 @@ export class DOMComponent {
 
 export class DOMFunctionComponent {
     element: SandElement;
-    instance = null;
-    parentNode: HTMLElement = null;
-    vdom: VdomType = null;
-    renderedElement: SandElement = null;
+    componentInstance!: Component;
+    parentNode!: HTMLElement;
+    vdom!: VdomType;
+    renderedElement!: SandElement;
+
     constructor(element: SandElement) {
         this.element = element;
     }
@@ -96,7 +111,7 @@ export class DOMFunctionComponent {
         const component = element.type as Function;
         const { props } = element;
 
-        const nextElement = component(props);
+        const nextElement = component(props) as SandElement;
         this.renderedElement = nextElement;
 
         const vdom = instantiateDOMComponent(nextElement);
@@ -105,17 +120,18 @@ export class DOMFunctionComponent {
         this.parentNode = parentNode;
         this.vdom = vdom;
     }
-    receiveComponent(newState: SandStateType) {
+    receiveComponent() {
         const { element, parentNode, renderedElement, vdom } = this;
 
         const component = element.type as Function;
         const nextProps = element.props;
 
-        const nextElement = component(nextProps);
+        const nextElement = component(nextProps) as SandElement;
         this.renderedElement = nextElement;
 
         if (renderedElement.type === nextElement.type) {
-            vdom.receiveComponent(nextElement);
+            vdom.element = nextElement;
+            vdom.receiveComponent();
         } else {
             vdom.unmountComponent();
             const nextVdom = instantiateDOMComponent(nextElement);
@@ -130,11 +146,12 @@ export class DOMFunctionComponent {
 }
 
 export class DOMCompositeComponent {
-    element: SandElement;
-    instance = null;
-    parentNode = null;
-    vdom = null;
-    renderedElement = null;
+    element: SandElement; // 新的元素
+    parentNode!: HTMLElement;
+    componentInstance!: Component;
+    vdom!: VdomType; // 当前render对应的虚拟dom
+    renderedElement!: SandElement; // 当前渲染的元素
+
     constructor(element: SandElement) {
         this.element = element;
     }
@@ -142,17 +159,22 @@ export class DOMCompositeComponent {
     mountComponent(parentNode: HTMLElement) {
         const { element } = this;
 
-        const Component = element.type as Component;
+        const TagComponent = element.type as typeof Component;
         const { props } = element;
 
-        const instance = new Component(props);
-        instance.sandInternalInstance = this;
+        const componentInstance = new TagComponent(props);
+        componentInstance._sandVdomInstance = this;
 
-        this.instance = instance;
-        const nextElement = instance.render();
+        this.componentInstance = componentInstance;
+        const nextElement = componentInstance.render();
+
+        if (!nextElement) {
+            return;
+        }
+
         this.renderedElement = nextElement;
 
-        instance.componentWillMount();
+        componentInstance.componentWillMount();
 
         const vdom = instantiateDOMComponent(nextElement);
 
@@ -160,27 +182,40 @@ export class DOMCompositeComponent {
         this.parentNode = parentNode;
         this.vdom = vdom;
 
-        instance.componentDidMount();
+        componentInstance.componentDidMount();
     }
-    receiveComponent(newState: SandStateType) {
-        const { instance, element, parentNode, renderedElement, vdom } = this;
+    receiveComponent(newState?: SandStateType) {
+        const {
+            componentInstance,
+            element,
+            parentNode,
+            renderedElement,
+            vdom,
+        } = this;
 
-        const nextState = { ...instance.state, ...newState };
+        const nextState = { ...componentInstance.state, ...newState };
         const nextProps = element.props;
 
-        instance.state = nextState;
-        const nextElement = instance.render();
-        this.renderedElement = nextElement;
+        componentInstance.state = nextState;
+        const nextElement = componentInstance.render();
 
-        instance.componentWillReceiveProps(nextProps);
-
-        if (!instance.shouldComponentUpdate(nextProps, newState)) {
+        if (!nextElement) {
             return;
         }
-        instance.componentWillUpdate();
+
+        this.renderedElement = nextElement;
+
+        componentInstance.componentWillReceiveProps(nextProps);
+
+        if (!componentInstance.shouldComponentUpdate(nextProps, nextState)) {
+            return;
+        }
+
+        componentInstance.componentWillUpdate();
 
         if (renderedElement.type === nextElement.type) {
-            vdom.receiveComponent(nextElement);
+            vdom.element = nextElement;
+            vdom.receiveComponent();
         } else {
             vdom.unmountComponent();
             const nextVdom = instantiateDOMComponent(nextElement);
@@ -188,33 +223,36 @@ export class DOMCompositeComponent {
             this.vdom = nextVdom;
         }
 
-        instance.componentDidUpdate();
+        componentInstance.componentDidUpdate();
     }
     unmountComponent() {
-        const { vdom, instance } = this;
-        instance.componentWillUnmount();
+        const { vdom, componentInstance } = this;
+        componentInstance.componentWillUnmount();
         vdom.unmountComponent();
     }
 }
 
-export function instantiateDOMComponent(node: SandElement | string | number) {
-    // text | number
-    if (typeof node === "string" || typeof node === "number") {
-        return new DOMTextComponent(node);
-    }
-
+export function instantiateDOMComponent(tag: SandElement | string | number) {
     // html tag
-    if (typeof node === "object" && typeof node.type === "string") {
-        return new DOMComponent(node);
+    if (typeof tag === "object" && typeof tag.type === "string") {
+        return new DOMComponent(tag);
     }
 
-    if (typeof node === "object" && typeof node.type === "function") {
+    if (typeof tag === "object" && typeof tag.type === "function") {
         // 对象组件
-        if (node.type.prototype instanceof Component) {
-            return new DOMCompositeComponent(node);
+        if (tag.type.prototype instanceof Component) {
+            return new DOMCompositeComponent(tag);
         }
 
         // 函数组件
-        return new DOMFunctionComponent(node);
+        return new DOMFunctionComponent(tag);
     }
+
+    // text | number
+    if (typeof tag === "string" || typeof tag === "number") {
+        return new DOMTextComponent(tag);
+    }
+
+    // 用户传入未知参数
+    return new DOMTextComponent('unknow tag');
 }

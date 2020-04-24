@@ -1,8 +1,9 @@
-import { instantiateDOMComponent, VdomType } from "./vdom";
+import { instantiateDOMComponent, VdomType, DOMTextComponent } from "./vdom";
 import { dash2camel, omit, propName2eventName } from "./util/util";
 import { SandPropsType, SandChildType } from "./type";
+import { SandElement } from "./element";
 
-type PropValueType = object | string | boolean | number | null;
+type PropValueType = { [key: string]: any } | string | boolean | number | null;
 
 function setStyle(
     style: CSSStyleDeclaration,
@@ -11,9 +12,9 @@ function setStyle(
 ) {
     key = dash2camel(key);
     if (value == null) {
-        style[key] = "";
+        style.setProperty(key, "");
     } else {
-        style[key] = value;
+        style.setProperty(key, "", String(value));
     }
 }
 
@@ -32,18 +33,19 @@ export function setProp(
             if (typeof oldValue === "string") {
                 style.cssText = "";
             } else {
-                oldValue = typeof oldValue === "object" ? oldValue : {};
-                value = typeof value === "object" ? value : {};
+                const safeOldValue =
+                    typeof oldValue === "object" ? oldValue! : {};
+                const safeValue = typeof value === "object" ? value! : {};
 
-                for (const key of Object.keys(oldValue)) {
-                    if (!(key in value)) {
+                for (const key of Object.keys(safeOldValue)) {
+                    if (!(key in safeValue)) {
                         setStyle(style, key, "");
                     }
                 }
 
-                for (const key of Object.keys(value)) {
-                    if (value[key] !== oldValue[key]) {
-                        setStyle(style, key, value[key]);
+                for (const key of Object.keys(safeValue)) {
+                    if (safeValue[key] !== safeOldValue[key]) {
+                        setStyle(style, key, safeValue[key]);
                     }
                 }
             }
@@ -53,6 +55,8 @@ export function setProp(
             -1 &&
         name in dom
     ) {
+        // TODO: fix
+        // @ts-ignore
         dom[name] = value;
     } else {
         // 处理className和htmlFor
@@ -74,14 +78,16 @@ export function diffProps(
     curProps: SandPropsType,
     nextProps: SandPropsType
 ) {
-    const mixProps = omit({ ...curProps, ...nextProps }, ["children"]);
+    const mixProps = omit({ ...curProps, ...nextProps }, [
+        "children",
+    ]) as SandPropsType;
 
     // 更新属性
     for (const propName of Object.keys(mixProps)) {
         if (propName === "children") {
             break;
         }
-        
+
         const prop = mixProps[propName];
         // 需要移除的属性
         if (!nextProps[propName]) {
@@ -116,21 +122,30 @@ export function diffProps(
     }
 }
 
+interface ChildMapType {
+    [key: string]: {
+        child: SandChildType;
+        used: boolean;
+        index: number;
+    };
+}
+function getChildKey(child: SandChildType, defaultKey: number) {
+    return child instanceof SandElement ? child.key || defaultKey : defaultKey;
+}
 export function diffChildren(
     dom: HTMLElement,
     curChildren: SandChildType[],
     nextChildren: SandChildType[],
-    childVdoms: VdomType[],
+    childVdoms: VdomType[]
 ) {
     const curChildrenMap = curChildren.reduce((map, child, index) => {
-        const key = child.key || index;
-        map[key] = {
+        map[getChildKey(child, index)] = {
             child,
             used: false,
             index: index,
         };
         return map;
-    }, {});
+    }, {} as ChildMapType);
 
     let lastIndex = 0;
     let curIndex = 0;
@@ -138,21 +153,47 @@ export function diffChildren(
     const newChildVdoms = [];
 
     for (const child of nextChildren) {
-        const key = child.key || curIndex;
+        const prevChild = curChildrenMap[getChildKey(child, curIndex)];
 
-        const prevChild = curChildrenMap[key];
-
-        if (prevChild && prevChild.child.type === child.type) {
-            const childvdom = childVdoms[prevChild.index];
-
-            childvdom.receiveComponent(child);
-            prevChild.used = true;
-            if (prevChild.index < lastIndex) {
-                dom.appendChild(childvdom.vdom);
+        if (prevChild) {
+            // 都是组件，且类型相同
+            if (
+                child instanceof SandElement &&
+                prevChild.child instanceof SandElement &&
+                prevChild.child.type === child.type
+            ) {
+                const childvdom = childVdoms[prevChild.index];
+                childvdom.element = child;
+                childvdom.receiveComponent();
+                prevChild.used = true;
+                if (prevChild.index < lastIndex) {
+                    // @ts-ignore
+                    dom.appendChild(childvdom.dom);
+                } else {
+                    lastIndex = prevChild.index;
+                }
+                newChildVdoms.push(childvdom);
+            } else if (
+                !(
+                    child instanceof SandElement &&
+                    prevChild.child instanceof SandElement
+                )
+            ) {
+                // 都是text，text改变时
+                if (child !== prevChild.child) {
+                    const childvdom = childVdoms[
+                        prevChild.index
+                    ] as DOMTextComponent;
+                    prevChild.used = true;
+                    childvdom.receiveComponent(child as string);
+                }
             } else {
-                lastIndex = prevChild.index;
+                // 都是组件，组件类型不同时 | 文本->dom, dom -> 文本
+                // 新增节点，旧节点抛弃，后面统一unmount
+                const childVdom = instantiateDOMComponent(child);
+                childVdom.mountComponent(dom);
+                newChildVdoms.push(childVdom);
             }
-            newChildVdoms.push(childvdom);
         } else {
             // 新增的节点
             const childVdom = instantiateDOMComponent(child);

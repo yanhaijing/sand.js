@@ -1,10 +1,13 @@
 import { SandStateType, SandPropsType, SandStateCallBack } from "./type";
+import { DOMCompositeComponent } from "./vdom";
+import { SandElement } from "./element";
 
 export class Component {
     props: SandPropsType;
+    state: SandStateType;
     cacheStates: SandStateType[];
     setStateCallbacks: SandStateCallBack[];
-    sandInternalInstance: any;
+    _sandVdomInstance: DOMCompositeComponent;
 
     constructor(props?: SandPropsType) {
         this.props = props || { children: [] };
@@ -31,8 +34,9 @@ export class Component {
             const nextMixState = cacheStates.reduce(
                 (res, cur) => ({ ...res, ...cur }),
                 {}
-            );
-            this.sandInternalInstance.receiveComponent(nextMixState);
+            ) as SandStateType;
+
+            this._sandVdomInstance.receiveComponent(nextMixState);
 
             this.setStateCallbacks.forEach((cb) => {
                 cb(nextMixState);
@@ -54,7 +58,7 @@ export class Component {
     forceUpdate() {
         throw new Error("Component forceUpdate need TODO");
     }
-    render() {
+    render(): SandElement | null {
         throw new Error("Sand Component need render method");
     }
 }

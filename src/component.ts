@@ -1,6 +1,6 @@
-import { SandStateType, SandPropsType, SandStateCallBack } from "./type";
-import { DOMCompositeComponent } from "./vdom";
-import { SandElement } from "./element";
+import { SandStateType, SandPropsType, SandStateCallBack } from './type';
+import { DOMCompositeComponent } from './vdom';
+import { SandElement } from './element';
 
 export class Component {
     props: SandPropsType;
@@ -20,7 +20,7 @@ export class Component {
 
         cacheStates.push(nextState);
 
-        if (typeof cb === "function") {
+        if (typeof cb === 'function') {
             this.setStateCallbacks.push(cb);
         }
 
@@ -49,16 +49,18 @@ export class Component {
     componentWillMount() {}
     componentDidMount() {}
     componentWillUnmount() {}
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     shouldComponentUpdate(nextProps: SandPropsType, nextState: SandStateType) {
         return true;
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     componentWillReceiveProps(nextProps: SandPropsType) {}
     componentWillUpdate() {}
     componentDidUpdate() {}
     forceUpdate() {
-        throw new Error("Component forceUpdate need TODO");
+        throw new Error('Component forceUpdate need TODO');
     }
     render(): SandElement | null {
-        throw new Error("Sand Component need render method");
+        throw new Error('Sand Component need render method');
     }
 }

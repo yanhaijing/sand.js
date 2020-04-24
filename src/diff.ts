@@ -1,7 +1,7 @@
-import { instantiateDOMComponent, VdomType, DOMTextComponent } from "./vdom";
-import { dash2camel, omit, propName2eventName } from "./util/util";
-import { SandPropsType, SandChildType } from "./type";
-import { SandElement } from "./element";
+import { instantiateDOMComponent, VdomType, DOMTextComponent } from './vdom';
+import { dash2camel, omit, propName2eventName } from './util/util';
+import { SandPropsType, SandChildType } from './type';
+import { SandElement } from './element';
 
 type PropValueType = { [key: string]: any } | string | boolean | number | null;
 
@@ -12,9 +12,9 @@ function setStyle(
 ) {
     key = dash2camel(key);
     if (value == null) {
-        style.setProperty(key, "");
+        style.setProperty(key, '');
     } else {
-        style.setProperty(key, "", String(value));
+        style.setProperty(key, '', String(value));
     }
 }
 
@@ -24,22 +24,24 @@ export function setProp(
     value?: PropValueType,
     oldValue?: PropValueType
 ) {
-    if (name === "style") {
+    if (name === 'style') {
         const style = dom.style;
 
-        if (typeof value === "string") {
+        if (typeof value === 'string') {
             style.cssText = value;
         } else {
-            if (typeof oldValue === "string") {
-                style.cssText = "";
+            if (typeof oldValue === 'string') {
+                style.cssText = '';
             } else {
                 const safeOldValue =
-                    typeof oldValue === "object" ? oldValue! : {};
-                const safeValue = typeof value === "object" ? value! : {};
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    typeof oldValue === 'object' ? oldValue! : {};
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                const safeValue = typeof value === 'object' ? value! : {};
 
                 for (const key of Object.keys(safeOldValue)) {
                     if (!(key in safeValue)) {
-                        setStyle(style, key, "");
+                        setStyle(style, key, '');
                     }
                 }
 
@@ -51,7 +53,7 @@ export function setProp(
             }
         }
     } else if (
-        ["selected", "selectedIndex", "checked", "value"].indexOf(name) !==
+        ['selected', 'selectedIndex', 'checked', 'value'].indexOf(name) !==
             -1 &&
         name in dom
     ) {
@@ -60,10 +62,10 @@ export function setProp(
         dom[name] = value;
     } else {
         // 处理className和htmlFor
-        if (name === "className") {
-            name = "class";
-        } else if (name === "htmlFor") {
-            name = "for";
+        if (name === 'className') {
+            name = 'class';
+        } else if (name === 'htmlFor') {
+            name = 'for';
         }
         if (value == null || value === false) {
             dom.removeAttribute(name);
@@ -79,12 +81,12 @@ export function diffProps(
     nextProps: SandPropsType
 ) {
     const mixProps = omit({ ...curProps, ...nextProps }, [
-        "children",
+        'children',
     ]) as SandPropsType;
 
     // 更新属性
     for (const propName of Object.keys(mixProps)) {
-        if (propName === "children") {
+        if (propName === 'children') {
             break;
         }
 

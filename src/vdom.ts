@@ -1,7 +1,9 @@
-import { SandElement } from "./element";
-import { Component } from "./component";
-import { diffProps, diffChildren } from "./diff";
-import { SandStateType } from "./type";
+/* eslint-disable @typescript-eslint/no-use-before-define */
+// eslint-disable-next-line max-classes-per-file
+import { SandElement } from './element';
+import { Component } from './component';
+import { diffProps, diffChildren } from './diff';
+import { SandStateType } from './type';
 
 export type VdomType =
     | DOMTextComponent
@@ -16,7 +18,7 @@ export class DOMTextComponent {
     element!: SandElement;
 
     constructor(text?: string | number) {
-        this.text = text == null ? "" : String(text);
+        this.text = text == null ? '' : String(text);
     }
     mountComponent(parentNode: HTMLElement) {
         const textNode = document.createTextNode(this.text);
@@ -27,7 +29,7 @@ export class DOMTextComponent {
         this.parentNode = parentNode;
     }
     receiveComponent(text?: string | number) {
-        text = text == null ? "" : String(text);
+        text = text == null ? '' : String(text);
         if (text !== this.text) {
             this.textNode.textContent = text;
             this.text = text;
@@ -234,11 +236,11 @@ export class DOMCompositeComponent {
 
 export function instantiateDOMComponent(tag: SandElement | string | number) {
     // html tag
-    if (typeof tag === "object" && typeof tag.type === "string") {
+    if (typeof tag === 'object' && typeof tag.type === 'string') {
         return new DOMComponent(tag);
     }
 
-    if (typeof tag === "object" && typeof tag.type === "function") {
+    if (typeof tag === 'object' && typeof tag.type === 'function') {
         // 对象组件
         if (tag.type.prototype instanceof Component) {
             return new DOMCompositeComponent(tag);
@@ -249,7 +251,7 @@ export function instantiateDOMComponent(tag: SandElement | string | number) {
     }
 
     // text | number
-    if (typeof tag === "string" || typeof tag === "number") {
+    if (typeof tag === 'string' || typeof tag === 'number') {
         return new DOMTextComponent(tag);
     }
 

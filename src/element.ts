@@ -1,4 +1,4 @@
-import { SandKeyType, SandPropsType, SandTagType } from "./type";
+import { SandKeyType, SandPropsType, SandTagType } from './type';
 
 export class SandElement {
     type: SandTagType;

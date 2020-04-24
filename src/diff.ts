@@ -12,9 +12,11 @@ function setStyle(
 ) {
     key = dash2camel(key);
     if (value == null) {
-        style.setProperty(key, '');
+        // @ts-ignore
+        style[key] =  '';
     } else {
-        style.setProperty(key, '', String(value));
+        // @ts-ignore
+        style[key] =  String(value);
     }
 }
 

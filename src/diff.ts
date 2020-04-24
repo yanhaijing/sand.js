@@ -181,14 +181,13 @@ export function diffChildren(
                     prevChild.child instanceof SandElement
                 )
             ) {
-                // 都是text，text改变时
-                if (child !== prevChild.child) {
-                    const childvdom = childVdoms[
-                        prevChild.index
-                    ] as DOMTextComponent;
-                    prevChild.used = true;
-                    childvdom.receiveComponent(child as string);
-                }
+                // 都是text
+                const childvdom = childVdoms[
+                    prevChild.index
+                ] as DOMTextComponent;
+                prevChild.used = true;
+                childvdom.receiveComponent(child as string);
+                newChildVdoms.push(childvdom);
             } else {
                 // 都是组件，组件类型不同时 | 文本->dom, dom -> 文本
                 // 新增节点，旧节点抛弃，后面统一unmount

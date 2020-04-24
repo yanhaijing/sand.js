@@ -6,7 +6,7 @@ export class SandElement {
     props: SandPropsType;
     constructor(
         type: SandTagType,
-        key: SandKeyType,
+        key: SandKeyType | undefined,
         props: SandPropsType
     ) {
         this.type = type;

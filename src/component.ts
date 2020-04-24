@@ -4,10 +4,10 @@ import { SandElement } from "./element";
 
 export class Component {
     props: SandPropsType;
-    state: SandStateType;
+    state!: SandStateType;
     cacheStates: SandStateType[];
     setStateCallbacks: SandStateCallBack[];
-    _sandVdomInstance: DOMCompositeComponent;
+    _sandVdomInstance!: DOMCompositeComponent;
 
     constructor(props?: SandPropsType) {
         this.props = props || { children: [] };

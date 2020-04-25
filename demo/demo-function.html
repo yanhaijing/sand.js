@@ -23,6 +23,7 @@
         </script>
         <script>
             function Component2(props) {
+                console.log('Component2 exec', props)
                 return createElement("div", null, [props.number]);
             }
 
@@ -46,6 +47,7 @@
                 }
                 render() {
                     const { number } = this.state;
+                    console.log('MyC render', number)
                     return createElement(
                         "div",
                         { id: "div1", class: "div1" + number },

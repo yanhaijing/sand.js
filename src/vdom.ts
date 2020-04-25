@@ -20,6 +20,9 @@ export class DOMTextComponent {
     constructor(text?: string | number) {
         this.text = text == null ? '' : String(text);
     }
+    getNativeDom() {
+        return this.textNode;
+    }
     mountComponent(parentNode: HTMLElement) {
         const textNode = document.createTextNode(this.text);
 
@@ -49,6 +52,9 @@ export class DOMComponent {
 
     constructor(element: SandElement) {
         this.element = element;
+    }
+    getNativeDom() {
+        return this.dom;
     }
     mountComponent(parentNode: HTMLElement) {
         const { element } = this;
@@ -107,7 +113,9 @@ export class DOMFunctionComponent {
     constructor(element: SandElement) {
         this.element = element;
     }
-
+    getNativeDom(): HTMLElement | Text {
+        return this.vdom.getNativeDom();
+    }
     mountComponent(parentNode: HTMLElement) {
         const { element } = this;
         const component = element.type as Function;
@@ -157,7 +165,9 @@ export class DOMCompositeComponent {
     constructor(element: SandElement) {
         this.element = element;
     }
-
+    getNativeDom(): HTMLElement | Text {
+        return this.vdom.getNativeDom();
+    }
     mountComponent(parentNode: HTMLElement) {
         const { element } = this;
 

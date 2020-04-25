@@ -171,8 +171,7 @@ export function diffChildren(
                 childvdom.receiveComponent();
                 prevChild.used = true;
                 if (prevChild.index < lastIndex) {
-                    // @ts-ignore
-                    dom.appendChild(childvdom.dom);
+                    dom.appendChild(childvdom.getNativeDom());
                 } else {
                     lastIndex = prevChild.index;
                 }

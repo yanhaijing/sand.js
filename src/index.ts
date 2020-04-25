@@ -11,18 +11,24 @@ export function render(element: SandElement, container: HTMLElement) {
 interface ConfigType {
     key?: SandKeyType;
 }
+type ChildrenType = SandChildType[] | [SandChildType[]];
+
 export function createElement(
     tag: SandTagType,
     config?: ConfigType,
-    children?: SandChildType | SandChildType[]
+    ...children: ChildrenType
 ) {
     config = config == null ? {} : config;
 
     const key = config.key;
     const props = omit(config, ['key']) as SandPropsType;
 
-    props.children =
-        children == null ? [] : Array.isArray(children) ? children : [children];
+    const childfirst = children[0];
+    const childs = Array.isArray(childfirst)
+        ? childfirst
+        : (children as SandChildType[]);
+
+    props.children = childs;
 
     return new SandElement(tag, key, props);
 }

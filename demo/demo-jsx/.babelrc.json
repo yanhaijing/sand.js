@@ -1,0 +1,12 @@
+{
+    "presets": [
+        [
+            "@babel/preset-react",
+            {
+                "pragma": "createElement",
+                "pragmaFrag": "DomFrag",
+                "throwIfNamespace": false
+            }
+        ]
+    ]
+}

@@ -208,22 +208,23 @@ export class DOMCompositeComponent {
         const nextState = { ...componentInstance.state, ...newState };
         const nextProps = element.props;
 
-        componentInstance.state = nextState;
-        const nextElement = componentInstance.render();
-
-        if (!nextElement) {
-            return;
-        }
-
-        this.renderedElement = nextElement;
-
         componentInstance.componentWillReceiveProps(nextProps);
 
+        componentInstance.state = nextState;
+        componentInstance.props = nextProps;
+        
         if (!componentInstance.shouldComponentUpdate(nextProps, nextState)) {
             return;
         }
 
         componentInstance.componentWillUpdate();
+        const nextElement = componentInstance.render();
+        
+        if (!nextElement) {
+            return;
+        }
+
+        this.renderedElement = nextElement;
 
         if (renderedElement.type === nextElement.type) {
             vdom.element = nextElement;

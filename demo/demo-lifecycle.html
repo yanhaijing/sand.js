@@ -36,7 +36,8 @@
                     console.log('Component2 componentWillReceiveProps', nextProps)
                 }
                 shouldComponentUpdate(nextProps, newState) {
-                    console.log('Component2 shouldComponentUpdate', nextProps, newState)
+                    console.log('Component2 shouldComponentUpdate', nextProps, newState);
+                    return true;
                 }
                 componentWillUpdate() {
                     console.log('Component2 componentWillUpdate')
@@ -45,6 +46,7 @@
                     console.log('Component2 componentDidUpdate')
                 }
                 render() {
+                    console.log('Component2 render', this.props)
                     return createElement("div", null, [this.props.number]);
                 }
             }
@@ -68,6 +70,7 @@
                 }
                 render() {
                     const { number } = this.state;
+                    console.log('Component1 render', number)
                     return createElement(
                         "div",
                         { id: "div1", class: "div1" + number },

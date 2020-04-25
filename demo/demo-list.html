@@ -48,24 +48,33 @@
                             ],
                         },
                         (state) => {
-                            console.log('onAdd', state.list);
+                            console.log('onAdd state', state.list);
                         }
                     );
                 }
                 onDel(index = this.state.list.length - 1) {
-                    console.log('onDel', index);
                     const list = this.state.list.filter(
                         (item, key) => index !== key
                     );
-                    this.setState({ list });
+                    this.setState({ list }, (state) => {
+                        console.log('onDel state', state)
+                    });
                 }
                 onAdjustOrder() {
                     const list = [...this.state.list].reverse();
 
-                    this.setState({ list });
+                    this.setState({ list }, (state) => {
+                        console.log('onAdjustOrder state', state)
+                    });
                 }
-                onCheckboxChange(event) {
-                    console.log('onCheckboxChange', event);
+                onCheckboxChange(e, index) {
+                    e.preventDefault();
+                    const list = [...this.state.list];
+                    list[index].checked = !list[index].checked;
+
+                    this.setState({ list }, (state) => {
+                        console.log('onCheckboxChange state', state)
+                    });
                 }
                 render() {
                     return createElement('div', { id: 'div1', class: 'div1' }, [
@@ -78,7 +87,7 @@
                                     createElement('input', {
                                         type: 'checkbox',
                                         checked: item.checked,
-                                        onChange: this.onCheckboxChange,
+                                        onChange: (e) => this.onCheckboxChange(e, index),
                                     }),
                                     createElement(
                                         'button',

@@ -7,6 +7,7 @@ import { SandStateType } from './type';
 
 export type VdomType =
     | DOMTextComponent
+    | DOMFragmentComponent
     | DOMComponent
     | DOMFunctionComponent
     | DOMCompositeComponent;
@@ -40,6 +41,59 @@ export class DOMTextComponent {
     }
     unmountComponent() {
         this.parentNode.removeChild(this.textNode);
+    }
+}
+
+export class DOMFragmentComponent {
+    element: SandElement;
+    parentNode!: HTMLElement; // 父元素dom节点
+    dom!: HTMLElement; // 当前元素dom节点
+    childVdoms: VdomType[] = []; // 子元素虚拟dom节点
+    renderedElement!: SandElement;
+
+    constructor(element: SandElement) {
+        this.element = element;
+    }
+    getNativeDom() {
+        return this.dom;
+    }
+    mountComponent(parentNode: HTMLElement) {
+        const { element } = this;
+        const { props } = element;
+
+        const dom = parentNode;
+
+        this.childVdoms = diffChildren(
+            dom,
+            [],
+            props.children,
+            this.childVdoms
+        ); // 旧孩子设置为空，相当于全部设置为新的
+
+        this.parentNode = parentNode;
+        this.dom = dom;
+        this.renderedElement = element;
+    }
+    receiveComponent() {
+        const { element, dom, renderedElement } = this;
+        const nextProps = element.props;
+        const curProps = renderedElement.props;
+
+        this.renderedElement = element;
+
+        this.childVdoms = diffChildren(
+            dom,
+            curProps.children,
+            nextProps.children,
+            this.childVdoms
+        );
+    }
+    unmountComponent() {
+        const { childVdoms } = this;
+
+        for (const child of childVdoms) {
+            child.unmountComponent();
+        }
     }
 }
 
@@ -246,6 +300,10 @@ export class DOMCompositeComponent {
 }
 
 export function instantiateDOMComponent(tag: SandElement | string | number) {
+    // fragment <></>
+    if (typeof tag === 'object' && tag.type === '') {
+        return new DOMFragmentComponent(tag);
+    }
     // html tag
     if (typeof tag === 'object' && typeof tag.type === 'string') {
         return new DOMComponent(tag);

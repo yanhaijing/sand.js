@@ -9,4 +9,4 @@
 - [ ] 支持事件代理
 - [X] 改为ts实现
 - [ ] 支持hook函数
-- [ ] 支持fragment
+- [X] 支持fragment

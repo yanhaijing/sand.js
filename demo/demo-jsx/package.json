@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "babel index.jsx --out-dir dist"
+    "build": "babel src/*.jsx --out-dir dist"
   },
   "author": "",
   "license": "ISC",

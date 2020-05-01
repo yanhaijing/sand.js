@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Document</title>
+        <style>
+            .div11 {
+                background: red;
+            }
+            .div12 {
+                background: green;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>demo</h1>
+        <div id="container"></div>
+        <script src="../node_modules/es5-shim/es5-shim.js"></script>
+        <script src="../node_modules/es5-shim/es5-sham.js"></script>
+        <script src="../dist/index.aio.js"></script>
+        <script>
+            const { Component, render, createElement, useState, useEffect } = sandjs;
+
+            function MyC1() {
+                const [name, setName] = useState('yan');
+                const [age, setAge] = useState(42);
+                const [sex, setSex] = useState('男');
+
+                useEffect(() => {
+                    console.log('useEffect age', age)
+                });
+
+                useEffect(() => {
+                    console.log('useEffect2 age', age);
+
+                    return () => {
+                        console.log('useEffect2 clean');
+                    }
+                });
+
+                return createElement('div', null, [
+                    createElement('div', null, [name]),
+                    createElement('div', null, [age]),
+                    createElement('div', null, [sex]),
+                    createElement('div', null, [
+                        createElement(
+                            'button',
+                            { onClick: () => setAge(age + 1) },
+                            ['add age']
+                        ),
+                        createElement(
+                            'button',
+                            { onClick: () => setAge(age - 1) },
+                            ['sub age']
+                        ),
+                    ]),
+                ]);
+            }
+
+            render(
+                createElement(MyC1, null, []),
+                document.getElementById('container')
+            );
+        </script>
+    </body>
+</html>

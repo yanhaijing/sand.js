@@ -34,3 +34,4 @@ export function createElement(
 }
 
 export { Component } from './component';
+export { useState, useEffect } from './hook';

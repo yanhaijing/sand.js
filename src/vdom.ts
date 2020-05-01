@@ -4,6 +4,11 @@ import { SandElement } from './element';
 import { Component } from './component';
 import { diffProps, diffChildren } from './diff';
 import { SandStateType } from './type';
+import {
+    functionScopeStack,
+    EffectFunctionType,
+    EffectFunctionRetureType,
+} from './hook';
 
 export type VdomType =
     | DOMTextComponent
@@ -60,7 +65,7 @@ export class DOMFragmentComponent {
         for (const vdom of this.childVdoms) {
             vdom.appendTo(parentNode);
         }
-        
+
         this.parentNode = parentNode;
         this.dom = parentNode;
     }
@@ -116,7 +121,7 @@ export class DOMComponent {
     }
     appendTo(parentNode = this.parentNode) {
         parentNode.appendChild(this.dom);
-        
+
         this.parentNode = parentNode;
     }
     mountComponent(parentNode: HTMLElement) {
@@ -172,7 +177,10 @@ export class DOMFunctionComponent {
     parentNode!: HTMLElement;
     vdom!: VdomType;
     renderedElement!: SandElement;
-
+    stateList: { state: any }[] = [];
+    stateCursor = 0;
+    effectList: EffectFunctionType[] = [];
+    effectCbList: EffectFunctionRetureType[] = [];
     constructor(element: SandElement) {
         this.element = element;
     }
@@ -180,12 +188,28 @@ export class DOMFunctionComponent {
         this.vdom.appendTo(parentNode);
         this.parentNode = parentNode;
     }
+    callEffect() {
+        this.effectList.forEach(cb => {
+            const res = cb();
+
+            // 需要清除的useEffect
+            if (typeof res === 'function') {
+                this.effectCbList.push(res);
+            }
+        });
+    }
     mountComponent(parentNode: HTMLElement) {
         const { element } = this;
         const component = element.type as Function;
         const { props } = element;
 
+        functionScopeStack.push(this);
+        this.stateCursor = 0;
+        this.effectList = [];
+        this.effectCbList = [];
         const nextElement = component(props) as SandElement;
+        functionScopeStack.pop();
+
         this.renderedElement = nextElement;
 
         const vdom = instantiateDOMComponent(nextElement);
@@ -193,6 +217,8 @@ export class DOMFunctionComponent {
         vdom.mountComponent(parentNode);
         this.parentNode = parentNode;
         this.vdom = vdom;
+
+        this.callEffect();
     }
     receiveComponent() {
         const { element, parentNode, renderedElement, vdom } = this;
@@ -200,7 +226,13 @@ export class DOMFunctionComponent {
         const component = element.type as Function;
         const nextProps = element.props;
 
+        functionScopeStack.push(this);
+        this.stateCursor = 0;
+        this.effectList = [];
+        this.effectCbList = [];
         const nextElement = component(nextProps) as SandElement;
+        functionScopeStack.pop();
+
         this.renderedElement = nextElement;
 
         if (renderedElement.type === nextElement.type) {
@@ -212,10 +244,14 @@ export class DOMFunctionComponent {
             nextVdom.mountComponent(parentNode);
             this.vdom = nextVdom;
         }
+
+        this.callEffect();
     }
     unmountComponent() {
         const { vdom } = this;
         vdom.unmountComponent();
+
+        this.effectCbList.forEach((cb) => cb()); // 需要清除的useEffect
     }
 }
 
@@ -277,14 +313,14 @@ export class DOMCompositeComponent {
 
         componentInstance.state = nextState;
         componentInstance.props = nextProps;
-        
+
         if (!componentInstance.shouldComponentUpdate(nextProps, nextState)) {
             return;
         }
 
         componentInstance.componentWillUpdate();
         const nextElement = componentInstance.render();
-        
+
         if (!nextElement) {
             return;
         }

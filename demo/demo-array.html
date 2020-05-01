@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Document</title>
+        <style>
+            .div11 {
+                background: red;
+            }
+            .div12 {
+                background: green;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>demo</h1>
+        <div id="container1"></div>
+        <div id="container2"></div>
+        <script src="../node_modules/es5-shim/es5-shim.js"></script>
+        <script src="../node_modules/es5-shim/es5-sham.js"></script>
+        <script src="../dist/index.aio.js"></script>
+        <script>
+            const { Component, render, createElement } = sandjs;
+
+            function FunctionComponent() {
+                return [
+                    createElement('div', null, [1]),
+                    createElement('div', null, [2]),
+                    createElement('div', null, [3]),
+                    createElement('div', null, [4]),
+                    createElement('div', null, [5]),
+                ];
+            }
+
+            class MyC extends Component {
+                constructor(props) {
+                    super(props);
+                    this.state = { number: 1 };
+
+                    this.onAdd = this.onAdd.bind(this);
+                    this.onDec = this.onDec.bind(this);
+                }
+                onAdd() {
+                    this.setState({
+                        number: this.state.number + 1,
+                    });
+                }
+                onDec() {
+                    this.setState({
+                        number: this.state.number - 1,
+                    });
+                }
+                render() {
+                    const { number } = this.state;
+                    return [
+                        createElement('div', null, [1]),
+                        createElement('div', null, [2]),
+                        createElement('div', null, [3]),
+                        createElement('div', null, [4]),
+                        createElement('div', null, [5]),
+                    ];
+                }
+            }
+
+            render(
+                createElement(MyC, null, []),
+                document.getElementById('container1')
+            );
+            render(
+                createElement(FunctionComponent, null, []),
+                document.getElementById('container2')
+            );
+        </script>
+    </body>
+</html>

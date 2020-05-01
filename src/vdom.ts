@@ -21,8 +21,10 @@ export class DOMTextComponent {
     constructor(text?: string | number) {
         this.text = text == null ? '' : String(text);
     }
-    getNativeDom() {
-        return this.textNode;
+    appendTo(parentNode = this.parentNode) {
+        parentNode.appendChild(this.textNode);
+
+        this.parentNode = parentNode;
     }
     mountComponent(parentNode: HTMLElement) {
         const textNode = document.createTextNode(this.text);
@@ -54,8 +56,13 @@ export class DOMFragmentComponent {
     constructor(element: SandElement) {
         this.element = element;
     }
-    getNativeDom() {
-        return this.dom;
+    appendTo(parentNode = this.parentNode) {
+        for (const vdom of this.childVdoms) {
+            vdom.appendTo(parentNode);
+        }
+        
+        this.parentNode = parentNode;
+        this.dom = parentNode;
     }
     mountComponent(parentNode: HTMLElement) {
         const { element } = this;
@@ -107,8 +114,10 @@ export class DOMComponent {
     constructor(element: SandElement) {
         this.element = element;
     }
-    getNativeDom() {
-        return this.dom;
+    appendTo(parentNode = this.parentNode) {
+        parentNode.appendChild(this.dom);
+        
+        this.parentNode = parentNode;
     }
     mountComponent(parentNode: HTMLElement) {
         const { element } = this;
@@ -167,8 +176,9 @@ export class DOMFunctionComponent {
     constructor(element: SandElement) {
         this.element = element;
     }
-    getNativeDom(): HTMLElement | Text {
-        return this.vdom.getNativeDom();
+    appendTo(parentNode = this.parentNode) {
+        this.vdom.appendTo(parentNode);
+        this.parentNode = parentNode;
     }
     mountComponent(parentNode: HTMLElement) {
         const { element } = this;
@@ -219,8 +229,9 @@ export class DOMCompositeComponent {
     constructor(element: SandElement) {
         this.element = element;
     }
-    getNativeDom(): HTMLElement | Text {
-        return this.vdom.getNativeDom();
+    appendTo(parentNode = this.parentNode) {
+        this.vdom.appendTo(parentNode);
+        this.parentNode = parentNode;
     }
     mountComponent(parentNode: HTMLElement) {
         const { element } = this;

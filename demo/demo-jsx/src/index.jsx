@@ -12,10 +12,14 @@ class HelloMessage2 extends Component {
 class HelloMessage extends Component {
     render() {
         return (
-            <div>
+            [<div>
                 Hello {this.props.name}
                 <HelloMessage2 name={this.props.name}></HelloMessage2>
-            </div>
+            </div>,
+            <div>
+            Hello {this.props.name}
+            <HelloMessage2 name={this.props.name}></HelloMessage2>
+        </div>]
         );
     }
 }

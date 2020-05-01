@@ -22,6 +22,20 @@
             const { Component, render, createElement } = sandjs;
         </script>
         <script>
+            function shuffle(arr) {
+                const copyArr = [...arr];
+                
+                let i = copyArr.length;
+
+                while(i--) {
+                    const randomIndex = Math.floor(Math.random() * i);
+                    const temp = copyArr[i];
+                    copyArr[i] = copyArr[randomIndex]; 
+                    copyArr[randomIndex] = temp; 
+                }
+
+                return copyArr;
+            }
             class MyC extends Component {
                 constructor(props) {
                     super(props);
@@ -61,10 +75,10 @@
                     });
                 }
                 onAdjustOrder() {
-                    const list = [...this.state.list].reverse();
+                    const list = shuffle(this.state.list);
 
                     this.setState({ list }, (state) => {
-                        console.log('onAdjustOrder state', state)
+                        console.log('onAdjustOrder state list', state.list)
                     });
                 }
                 onCheckboxChange(e, index) {

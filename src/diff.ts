@@ -171,7 +171,7 @@ export function diffChildren(
                 childvdom.receiveComponent();
                 prevChild.used = true;
                 if (prevChild.index < lastIndex) {
-                    dom.appendChild(childvdom.getNativeDom());
+                    childvdom.appendTo(); // 移动到当前父元素的最后面
                 } else {
                     lastIndex = prevChild.index;
                 }

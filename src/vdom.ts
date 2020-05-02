@@ -49,7 +49,7 @@ export class DOMTextComponent {
         }
 
         this.appendTo();
-        console.warn('DOMTextComponent insertBefore', this.textNode, nextVdomSibling);
+        // console.warn('DOMTextComponent insertBefore', this.textNode, nextVdomSibling);
     }
     appendTo(parentNode = this.parentNode) {
         if (this.textNode) {
@@ -99,7 +99,7 @@ export class DOMFragmentComponent {
         ];
     }
     insertBefore(nextVdomSibling = this.nextVdomSibling) {
-        // console.warn('DOMFragmentComponent insertBefore', nextVdomSibling);
+        console.warn('DOMFragmentComponent insertBefore', nextVdomSibling);
         for (const vdom of this.childVdoms) {
             vdom.insertBefore(nextVdomSibling);
         }

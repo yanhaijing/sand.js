@@ -36,7 +36,7 @@ export class Component {
                 {}
             ) as SandStateType;
 
-            this._sandVdomInstance.receiveComponent(nextMixState);
+            this._sandVdomInstance.receiveComponent(() => null, nextMixState);
 
             this.setStateCallbacks.forEach((cb) => {
                 cb(nextMixState);

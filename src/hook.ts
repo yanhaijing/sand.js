@@ -15,7 +15,7 @@ export function useState<T>(initState: T) {
     const cb = (newState: T) => {
         stateList[stateCursor].state = newState;
 
-        curF.receiveComponent();
+        curF.receiveComponent(() => null);
     };
 
     curF.stateCursor = stateCursor + 1;

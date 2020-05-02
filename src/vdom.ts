@@ -17,6 +17,10 @@ export type VdomType =
     | DOMFunctionComponent
     | DOMCompositeComponent;
 
+interface DoneType {
+    (): void;
+}
+
 export class DOMTextComponent {
     text: string;
     textNode!: Text;
@@ -39,12 +43,13 @@ export class DOMTextComponent {
         this.textNode = textNode;
         this.parentNode = parentNode;
     }
-    receiveComponent(text?: string | number) {
+    receiveComponent(done: DoneType, text?: string | number) {
         text = text == null ? '' : String(text);
         if (text !== this.text) {
             this.textNode.textContent = text;
             this.text = text;
         }
+        done();
     }
     unmountComponent() {
         this.parentNode.removeChild(this.textNode);
@@ -79,14 +84,15 @@ export class DOMFragmentComponent {
             dom,
             [],
             props.children,
-            this.childVdoms
+            this.childVdoms,
+            () => null
         ); // 旧孩子设置为空，相当于全部设置为新的
 
         this.parentNode = parentNode;
         this.dom = dom;
         this.renderedElement = element;
     }
-    receiveComponent() {
+    receiveComponent(done: DoneType) {
         const { element, dom, renderedElement } = this;
         const nextProps = element.props;
         const curProps = renderedElement.props;
@@ -97,7 +103,8 @@ export class DOMFragmentComponent {
             dom,
             curProps.children,
             nextProps.children,
-            this.childVdoms
+            this.childVdoms,
+            done
         );
     }
     unmountComponent() {
@@ -137,7 +144,8 @@ export class DOMComponent {
             dom,
             [],
             props.children,
-            this.childVdoms
+            this.childVdoms,
+            () => null
         ); // 旧孩子设置为空，相当于全部设置为新的
 
         parentNode.appendChild(dom);
@@ -145,7 +153,7 @@ export class DOMComponent {
         this.dom = dom;
         this.renderedElement = element;
     }
-    receiveComponent() {
+    receiveComponent(done: DoneType) {
         const { element, dom, renderedElement } = this;
         const nextProps = element.props;
         const curProps = renderedElement.props;
@@ -157,7 +165,8 @@ export class DOMComponent {
             dom,
             curProps.children,
             nextProps.children,
-            this.childVdoms
+            this.childVdoms,
+            done
         );
     }
     unmountComponent() {
@@ -218,14 +227,14 @@ export class DOMFunctionComponent {
 
         this.renderedElements = nextElements;
 
-        const nextVdoms = diffChildren(parentNode, [], nextElements, []);
+        const nextVdoms = diffChildren(parentNode, [], nextElements, [], () => null);
 
         this.parentNode = parentNode;
         this.vdoms = nextVdoms;
 
         this.callEffect();
     }
-    receiveComponent() {
+    receiveComponent(done: DoneType) {
         const { element, parentNode, renderedElements, vdoms } = this;
 
         const component = element.type as FunctionComponentType;
@@ -250,11 +259,14 @@ export class DOMFunctionComponent {
             parentNode,
             renderedElements,
             nextElements,
-            vdoms
+            vdoms,
+            () => {
+                this.callEffect();
+                done();
+            }
         );
 
         this.vdoms = nextVdoms;
-        this.callEffect();
     }
     unmountComponent() {
         const { vdoms } = this;
@@ -300,14 +312,14 @@ export class DOMCompositeComponent {
 
         componentInstance.componentWillMount();
 
-        const nextVdoms = diffChildren(parentNode, [], nextElements, []);
+        const nextVdoms = diffChildren(parentNode, [], nextElements, [], () => null);
 
         this.parentNode = parentNode;
         this.vdoms = nextVdoms;
 
         componentInstance.componentDidMount();
     }
-    receiveComponent(newState?: SandStateType) {
+    receiveComponent(done: DoneType, newState?: SandStateType) {
         const {
             componentInstance,
             element,
@@ -343,12 +355,16 @@ export class DOMCompositeComponent {
             parentNode,
             renderedElements,
             nextElements,
-            vdoms
+            vdoms,
+            () => {
+                done();
+                componentInstance.componentDidUpdate();
+            }
         );
 
         this.vdoms = nextVdoms;
 
-        componentInstance.componentDidUpdate();
+        
     }
     unmountComponent() {
         const { vdoms, componentInstance } = this;
@@ -357,7 +373,9 @@ export class DOMCompositeComponent {
     }
 }
 
-export function instantiateDOMComponent(tag: SandElement | string | number | null | undefined) {
+export function instantiateDOMComponent(
+    tag: SandElement | string | number | null | undefined
+) {
     if (tag == null) {
         return new DOMTextComponent('');
     }

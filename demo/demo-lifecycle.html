@@ -63,6 +63,22 @@
                 componentDidMount() {
                     console.log('Component1 componentDidMount')
                 }
+                componentWillUnmount() {
+                    console.log('Component1 componentWillUnmount')
+                }
+                componentWillReceiveProps(nextProps) {
+                    console.log('Component1 componentWillReceiveProps', nextProps)
+                }
+                shouldComponentUpdate(nextProps, newState) {
+                    console.log('Component1 shouldComponentUpdate', nextProps, newState);
+                    return true;
+                }
+                componentWillUpdate() {
+                    console.log('Component1 componentWillUpdate')
+                }
+                componentDidUpdate() {
+                    console.log('Component1 componentDidUpdate')
+                }
                 onAdd() {
                     this.setState({
                         number: this.state.number + 1,

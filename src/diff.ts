@@ -2,6 +2,7 @@ import { instantiateDOMComponent, VdomType, DOMTextComponent } from './vdom';
 import { dash2camel, omit, propName2eventName } from './util/util';
 import { SandPropsType, SandChildType } from './type';
 import { SandElement } from './element';
+import { Transaction, globalTaskQueue } from './queue';
 
 type PropValueType = { [key: string]: any } | string | boolean | number | null;
 
@@ -145,7 +146,8 @@ export function diffChildren(
     dom: HTMLElement,
     curChildren: SandChildType[],
     nextChildren: SandChildType[],
-    childVdoms: VdomType[]
+    childVdoms: VdomType[],
+    done: () => void
 ) {
     const curChildrenMap = curChildren.reduce((map, child, index) => {
         map[getChildKey(child, index)] = {
@@ -161,6 +163,10 @@ export function diffChildren(
 
     const newChildVdoms = [];
 
+    const transaction = new Transaction(() => {
+        done();
+    });
+
     for (const child of nextChildren) {
         const prevChild = curChildrenMap[getChildKey(child, curIndex)];
 
@@ -173,10 +179,17 @@ export function diffChildren(
             ) {
                 const childvdom = childVdoms[prevChild.index];
                 childvdom.element = child;
-                childvdom.receiveComponent();
+                // 添加到事务
+                transaction.add((done) => {
+                    childvdom.receiveComponent(done);
+                });
                 prevChild.used = true;
                 if (prevChild.index < lastIndex) {
-                    childvdom.appendTo(); // 移动到当前父元素的最后面
+                    // 添加到事务
+                    transaction.add((done) => {
+                        childvdom.appendTo(); // 移动到当前父元素的最后面
+                        done();
+                    });
                 } else {
                     lastIndex = prevChild.index;
                 }
@@ -187,7 +200,7 @@ export function diffChildren(
                     prevChild.index
                 ] as DOMTextComponent;
                 prevChild.used = true;
-                childvdom.receiveComponent(child as string);
+                childvdom.receiveComponent(() => null, child as string);
                 newChildVdoms.push(childvdom);
             } else {
                 // 都是组件，组件类型不同时 | 文本->dom, dom -> 文本
@@ -213,5 +226,6 @@ export function diffChildren(
         }
     }
 
+    globalTaskQueue.add(transaction); // 指定队列
     return newChildVdoms;
 }

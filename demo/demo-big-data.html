@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Document</title>
+        <style>
+            .div11 {
+                background: red;
+            }
+            .div12 {
+                background: green;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>demo</h1>
+        <div id="container"></div>
+        <script src="../node_modules/es5-shim/es5-shim.js"></script>
+        <script src="../node_modules/es5-shim/es5-sham.js"></script>
+        <script src="../dist/index.aio.js"></script>
+        <script>
+            const { Component, render, createElement } = sandjs;
+            function MyC2(props) {
+                return createElement('div', null, [
+                    createElement('h4', null, props.children),
+                    ...[...Array(100)].map((v, k) =>
+                        createElement('div', null, [k])
+                    ),
+                ]);
+            }
+            class MyC extends Component {
+                constructor(props) {
+                    super(props);
+                    this.state = { number: 10000 };
+
+                    this.onAdd = this.onAdd.bind(this);
+                    this.onDec = this.onDec.bind(this);
+                }
+                onAdd() {
+                    this.setState({
+                        number: this.state.number + 1,
+                    });
+                }
+                onDec() {
+                    this.setState({
+                        number: this.state.number - 1,
+                    });
+                }
+                componentWillUpdate() {
+                    this.stime = Date.now();
+                }
+                componentDidUpdate() {
+                    console.log('MyC render time', Date.now() - this.stime);
+                }
+                render() {
+                    const { number } = this.state;
+                    return createElement('div', null, [
+                        createElement('div', null, [
+                            createElement('button', { onClick: this.onAdd }, [
+                                '增加',
+                            ]),
+                            createElement('button', { onClick: this.onDec }, [
+                                '减少',
+                            ]),
+                            createElement(
+                                'div',
+                                null,
+                                [...Array(number)].map((v, k) =>
+                                    createElement(MyC2, null, [k])
+                                )
+                            ),
+                        ]),
+                    ]);
+                }
+            }
+
+            render(
+                createElement(MyC, null, []),
+                document.getElementById('container')
+            );
+        </script>
+    </body>
+</html>

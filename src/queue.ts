@@ -54,7 +54,6 @@ class TaskQueue {
         const { queue, timeslice } = this;
 
         const stime = Date.now();
-        console.log('TaskQueue run', queue);
         // 队列有内容 且时间片未用完
         while (queue.length && Date.now() - stime < timeslice) {
             const item = queue.shift();

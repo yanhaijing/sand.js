@@ -5,6 +5,11 @@ import { SandElement } from './element';
 
 type PropValueType = { [key: string]: any } | string | boolean | number | null;
 
+function isTextChild(child: SandChildType) {
+    const type = typeof child;
+    return type === 'string' || type === 'number';
+}
+
 function setStyle(
     style: CSSStyleDeclaration,
     key: string,
@@ -13,10 +18,10 @@ function setStyle(
     key = dash2camel(key);
     if (value == null) {
         // @ts-ignore
-        style[key] =  '';
+        style[key] = '';
     } else {
         // @ts-ignore
-        style[key] =  String(value);
+        style[key] = String(value);
     }
 }
 
@@ -176,12 +181,7 @@ export function diffChildren(
                     lastIndex = prevChild.index;
                 }
                 newChildVdoms.push(childvdom);
-            } else if (
-                !(
-                    child instanceof SandElement &&
-                    prevChild.child instanceof SandElement
-                )
-            ) {
+            } else if (isTextChild(child) && isTextChild(prevChild.child)) {
                 // 都是text
                 const childvdom = childVdoms[
                     prevChild.index

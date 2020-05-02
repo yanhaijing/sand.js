@@ -3,7 +3,7 @@
 import { SandElement } from './element';
 import { Component } from './component';
 import { diffProps, diffChildren } from './diff';
-import { SandStateType } from './type';
+import { SandStateType, FunctionComponentType } from './type';
 import {
     functionScopeStack,
     EffectFunctionType,
@@ -175,8 +175,8 @@ export class DOMFunctionComponent {
     element: SandElement;
     componentInstance!: Component;
     parentNode!: HTMLElement;
-    vdom!: VdomType;
-    renderedElement!: SandElement;
+    vdoms: VdomType[] = [];
+    renderedElements: SandElement[] = [];
     stateList: { state: any }[] = [];
     stateCursor = 0;
     effectList: EffectFunctionType[] = [];
@@ -185,11 +185,11 @@ export class DOMFunctionComponent {
         this.element = element;
     }
     appendTo(parentNode = this.parentNode) {
-        this.vdom.appendTo(parentNode);
+        this.vdoms.forEach((vdom) => vdom.appendTo(parentNode));
         this.parentNode = parentNode;
     }
     callEffect() {
-        this.effectList.forEach(cb => {
+        this.effectList.forEach((cb) => {
             const res = cb();
 
             // 需要清除的useEffect
@@ -200,58 +200,67 @@ export class DOMFunctionComponent {
     }
     mountComponent(parentNode: HTMLElement) {
         const { element } = this;
-        const component = element.type as Function;
+        const component = element.type as FunctionComponentType;
         const { props } = element;
 
         functionScopeStack.push(this);
         this.stateCursor = 0;
         this.effectList = [];
         this.effectCbList = [];
-        const nextElement = component(props) as SandElement;
+        const res = component(props);
         functionScopeStack.pop();
 
-        this.renderedElement = nextElement;
+        const nextElements = !res
+            ? ([] as SandElement[])
+            : Array.isArray(res)
+                ? res
+                : [res];
 
-        const vdom = instantiateDOMComponent(nextElement);
+        this.renderedElements = nextElements;
 
-        vdom.mountComponent(parentNode);
+        const nextVdoms = diffChildren(parentNode, [], nextElements, []);
+
         this.parentNode = parentNode;
-        this.vdom = vdom;
+        this.vdoms = nextVdoms;
 
         this.callEffect();
     }
     receiveComponent() {
-        const { element, parentNode, renderedElement, vdom } = this;
+        const { element, parentNode, renderedElements, vdoms } = this;
 
-        const component = element.type as Function;
+        const component = element.type as FunctionComponentType;
         const nextProps = element.props;
 
         functionScopeStack.push(this);
         this.stateCursor = 0;
         this.effectList = [];
         this.effectCbList = [];
-        const nextElement = component(nextProps) as SandElement;
+        const res = component(nextProps);
         functionScopeStack.pop();
 
-        this.renderedElement = nextElement;
+        const nextElements = !res
+            ? ([] as SandElement[])
+            : Array.isArray(res)
+                ? res
+                : [res];
 
-        if (renderedElement.type === nextElement.type) {
-            vdom.element = nextElement;
-            vdom.receiveComponent();
-        } else {
-            vdom.unmountComponent();
-            const nextVdom = instantiateDOMComponent(nextElement);
-            nextVdom.mountComponent(parentNode);
-            this.vdom = nextVdom;
-        }
+        this.renderedElements = nextElements;
 
+        const nextVdoms = diffChildren(
+            parentNode,
+            renderedElements,
+            nextElements,
+            vdoms
+        );
+
+        this.vdoms = nextVdoms;
         this.callEffect();
     }
     unmountComponent() {
-        const { vdom } = this;
-        vdom.unmountComponent();
+        const { vdoms } = this;
 
         this.effectCbList.forEach((cb) => cb()); // 需要清除的useEffect
+        vdoms.forEach((vdom) => vdom.unmountComponent());
     }
 }
 
@@ -259,41 +268,42 @@ export class DOMCompositeComponent {
     element: SandElement; // 新的元素
     parentNode!: HTMLElement;
     componentInstance!: Component;
-    vdom!: VdomType; // 当前render对应的虚拟dom
-    renderedElement!: SandElement; // 当前渲染的元素
+    vdoms: VdomType[] = []; // 当前render对应的虚拟dom
+    renderedElements: SandElement[] = []; // 当前渲染的元素
 
     constructor(element: SandElement) {
         this.element = element;
     }
     appendTo(parentNode = this.parentNode) {
-        this.vdom.appendTo(parentNode);
+        this.vdoms.forEach((vdom) => vdom.appendTo(parentNode));
         this.parentNode = parentNode;
     }
     mountComponent(parentNode: HTMLElement) {
         const { element } = this;
 
-        const TagComponent = element.type as typeof Component;
+        const TagComponent = (element.type as unknown) as typeof Component;
         const { props } = element;
 
         const componentInstance = new TagComponent(props);
         componentInstance._sandVdomInstance = this;
 
         this.componentInstance = componentInstance;
-        const nextElement = componentInstance.render();
+        const res = componentInstance.render();
 
-        if (!nextElement) {
-            return;
-        }
+        const nextElements = !res
+            ? ([] as SandElement[])
+            : Array.isArray(res)
+                ? res
+                : [res];
 
-        this.renderedElement = nextElement;
+        this.renderedElements = nextElements;
 
         componentInstance.componentWillMount();
 
-        const vdom = instantiateDOMComponent(nextElement);
+        const nextVdoms = diffChildren(parentNode, [], nextElements, []);
 
-        vdom.mountComponent(parentNode);
         this.parentNode = parentNode;
-        this.vdom = vdom;
+        this.vdoms = nextVdoms;
 
         componentInstance.componentDidMount();
     }
@@ -302,8 +312,8 @@ export class DOMCompositeComponent {
             componentInstance,
             element,
             parentNode,
-            renderedElement,
-            vdom,
+            renderedElements,
+            vdoms,
         } = this;
 
         const nextState = { ...componentInstance.state, ...newState };
@@ -319,34 +329,39 @@ export class DOMCompositeComponent {
         }
 
         componentInstance.componentWillUpdate();
-        const nextElement = componentInstance.render();
+        const res = componentInstance.render();
 
-        if (!nextElement) {
-            return;
-        }
+        const nextElements = !res
+            ? ([] as SandElement[])
+            : Array.isArray(res)
+                ? res
+                : [res];
 
-        this.renderedElement = nextElement;
+        this.renderedElements = nextElements;
 
-        if (renderedElement.type === nextElement.type) {
-            vdom.element = nextElement;
-            vdom.receiveComponent();
-        } else {
-            vdom.unmountComponent();
-            const nextVdom = instantiateDOMComponent(nextElement);
-            nextVdom.mountComponent(parentNode);
-            this.vdom = nextVdom;
-        }
+        const nextVdoms = diffChildren(
+            parentNode,
+            renderedElements,
+            nextElements,
+            vdoms
+        );
+
+        this.vdoms = nextVdoms;
 
         componentInstance.componentDidUpdate();
     }
     unmountComponent() {
-        const { vdom, componentInstance } = this;
+        const { vdoms, componentInstance } = this;
         componentInstance.componentWillUnmount();
-        vdom.unmountComponent();
+        vdoms.forEach((vdom) => vdom.unmountComponent());
     }
 }
 
-export function instantiateDOMComponent(tag: SandElement | string | number) {
+export function instantiateDOMComponent(tag: SandElement | string | number | null | undefined) {
+    if (tag == null) {
+        return new DOMTextComponent('');
+    }
+
     // fragment <></>
     if (typeof tag === 'object' && tag.type === '') {
         return new DOMFragmentComponent(tag);
@@ -372,5 +387,6 @@ export function instantiateDOMComponent(tag: SandElement | string | number) {
     }
 
     // 用户传入未知参数
-    return new DOMTextComponent('unknow tag');
+    // boolean 或其他对象等
+    return new DOMTextComponent(String(tag));
 }

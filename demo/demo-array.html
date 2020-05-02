@@ -35,7 +35,7 @@
             class MyC extends Component {
                 constructor(props) {
                     super(props);
-                    this.state = { number: 1 };
+                    this.state = { number: 5 };
 
                     this.onAdd = this.onAdd.bind(this);
                     this.onDec = this.onDec.bind(this);
@@ -53,11 +53,21 @@
                 render() {
                     const { number } = this.state;
                     return [
-                        createElement('div', null, [1]),
-                        createElement('div', null, [2]),
-                        createElement('div', null, [3]),
-                        createElement('div', null, [4]),
-                        createElement('div', null, [5]),
+                        ...[...Array(number)].map((v, k) =>
+                            createElement('div', null, k)
+                        ),
+                        createElement('div', null, [
+                            createElement(
+                                'button',
+                                { onClick: this.onAdd },
+                                'add'
+                            ),
+                            createElement(
+                                'button',
+                                { onClick: this.onDec },
+                                'del'
+                            ),
+                        ]),
                     ];
                 }
             }

@@ -60,7 +60,7 @@ export class Component {
     forceUpdate() {
         throw new Error('Component forceUpdate need TODO');
     }
-    render(): SandElement | null {
+    render(): SandElement | SandElement[] | null {
         throw new Error('Sand Component need render method');
     }
 }

@@ -9,6 +9,7 @@ import {
     EffectFunctionType,
     EffectFunctionRetureType,
 } from './hook';
+import { noop } from './util/util';
 
 export type VdomType =
     | DOMTextComponent
@@ -35,13 +36,14 @@ export class DOMTextComponent {
 
         this.parentNode = parentNode;
     }
-    mountComponent(parentNode: HTMLElement) {
+    mountComponent(parentNode: HTMLElement, done: DoneType = noop) {
         const textNode = document.createTextNode(this.text);
 
         parentNode.appendChild(textNode);
 
         this.textNode = textNode;
         this.parentNode = parentNode;
+        done();
     }
     receiveComponent(done: DoneType, text?: string | number) {
         text = text == null ? '' : String(text);
@@ -74,7 +76,7 @@ export class DOMFragmentComponent {
         this.parentNode = parentNode;
         this.dom = parentNode;
     }
-    mountComponent(parentNode: HTMLElement) {
+    mountComponent(parentNode: HTMLElement, done: DoneType = noop) {
         const { element } = this;
         const { props } = element;
 
@@ -85,7 +87,7 @@ export class DOMFragmentComponent {
             [],
             props.children,
             this.childVdoms,
-            () => null
+            done
         ); // 旧孩子设置为空，相当于全部设置为新的
 
         this.parentNode = parentNode;
@@ -131,7 +133,7 @@ export class DOMComponent {
 
         this.parentNode = parentNode;
     }
-    mountComponent(parentNode: HTMLElement) {
+    mountComponent(parentNode: HTMLElement, done: DoneType = noop) {
         const { element } = this;
         const tagName = element.type as string;
         const { props } = element;
@@ -145,7 +147,7 @@ export class DOMComponent {
             [],
             props.children,
             this.childVdoms,
-            () => null
+            done
         ); // 旧孩子设置为空，相当于全部设置为新的
 
         parentNode.appendChild(dom);
@@ -207,7 +209,7 @@ export class DOMFunctionComponent {
             }
         });
     }
-    mountComponent(parentNode: HTMLElement) {
+    mountComponent(parentNode: HTMLElement, done: DoneType = noop) {
         const { element } = this;
         const component = element.type as FunctionComponentType;
         const { props } = element;
@@ -227,7 +229,7 @@ export class DOMFunctionComponent {
 
         this.renderedElements = nextElements;
 
-        const nextVdoms = diffChildren(parentNode, [], nextElements, [], () => null);
+        const nextVdoms = diffChildren(parentNode, [], nextElements, [], done);
 
         this.parentNode = parentNode;
         this.vdoms = nextVdoms;
@@ -290,7 +292,7 @@ export class DOMCompositeComponent {
         this.vdoms.forEach((vdom) => vdom.appendTo(parentNode));
         this.parentNode = parentNode;
     }
-    mountComponent(parentNode: HTMLElement) {
+    mountComponent(parentNode: HTMLElement, done: DoneType = noop) {
         const { element } = this;
 
         const TagComponent = (element.type as unknown) as typeof Component;
@@ -312,7 +314,7 @@ export class DOMCompositeComponent {
 
         componentInstance.componentWillMount();
 
-        const nextVdoms = diffChildren(parentNode, [], nextElements, [], () => null);
+        const nextVdoms = diffChildren(parentNode, [], nextElements, [], done);
 
         this.parentNode = parentNode;
         this.vdoms = nextVdoms;

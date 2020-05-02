@@ -1,6 +1,7 @@
 import { SandStateType, SandPropsType, SandStateCallBack } from './type';
 import { DOMCompositeComponent } from './vdom';
 import { SandElement } from './element';
+import { noop } from './util/util';
 
 export class Component {
     props: SandPropsType;
@@ -36,7 +37,7 @@ export class Component {
                 {}
             ) as SandStateType;
 
-            this._sandVdomInstance.receiveComponent(() => null, nextMixState);
+            this._sandVdomInstance.receiveComponent(noop, nextMixState);
 
             this.setStateCallbacks.forEach((cb) => {
                 cb(nextMixState);

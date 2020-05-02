@@ -69,7 +69,7 @@ class TaskQueue {
         // 本次时间片结束，判断是否还有下次时间片
         if (queue.length) {
             console.log('TaskQueue next timeslice');
-            this.timeoutId = setTimeout(() => this.run(), timeslice);
+            this.timeoutId = setTimeout(() => this.run());
         }
     }
     add(transaction: Transaction) {

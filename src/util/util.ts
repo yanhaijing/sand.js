@@ -1,6 +1,7 @@
 interface ObjectType {
     [key: string]: any;
 }
+export function noop() {}
 export function omit(obj: ObjectType, keys: string[]): ObjectType {
     return Object.keys(obj)
         .filter((key) => keys.indexOf(key) === -1)

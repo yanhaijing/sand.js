@@ -1,4 +1,5 @@
 import { FunctionStack } from './util/function-stack';
+import { noop } from './util/util';
 
 export const functionScopeStack = new FunctionStack();
 
@@ -15,7 +16,7 @@ export function useState<T>(initState: T) {
     const cb = (newState: T) => {
         stateList[stateCursor].state = newState;
 
-        curF.receiveComponent(() => null);
+        curF.receiveComponent(noop);
     };
 
     curF.stateCursor = stateCursor + 1;

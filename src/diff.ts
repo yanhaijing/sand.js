@@ -1,5 +1,5 @@
 import { instantiateDOMComponent, VdomType, DOMTextComponent } from './vdom';
-import { dash2camel, omit, propName2eventName } from './util/util';
+import { dash2camel, omit, propName2eventName, noop } from './util/util';
 import { SandPropsType, SandChildType } from './type';
 import { SandElement } from './element';
 import { Transaction, globalTaskQueue } from './queue';
@@ -200,19 +200,25 @@ export function diffChildren(
                     prevChild.index
                 ] as DOMTextComponent;
                 prevChild.used = true;
-                childvdom.receiveComponent(() => null, child as string);
+                childvdom.receiveComponent(noop, child as string);
                 newChildVdoms.push(childvdom);
             } else {
                 // 都是组件，组件类型不同时 | 文本->dom, dom -> 文本
                 // 新增节点，旧节点抛弃，后面统一unmount
                 const childVdom = instantiateDOMComponent(child);
-                childVdom.mountComponent(dom);
+                // 添加到事务
+                transaction.add((done) => {
+                    childVdom.mountComponent(dom, done);
+                });
                 newChildVdoms.push(childVdom);
             }
         } else {
             // 新增的节点
             const childVdom = instantiateDOMComponent(child);
-            childVdom.mountComponent(dom);
+            // 添加到事务
+            transaction.add((done) => {
+                childVdom.mountComponent(dom, done);
+            });
             newChildVdoms.push(childVdom);
         }
 

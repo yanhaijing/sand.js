@@ -20,10 +20,18 @@
         <script src="../dist/index.aio.js"></script>
         <script>
             const { Component, render, createElement } = sandjs;
+            function MyC4(props) {
+                return createElement('div', null, [
+                    createElement('div', null, ['MyC4']),
+                ]);
+            }
+
             function MyC2(props) {
-                return [
-                    createElement('div', null, [props.number])
-                ];
+                return createElement('div', null, [
+                    createElement(MyC4, null),
+                    createElement('', null, [1, 2, 3]),
+                    createElement('div', null, ['MyC2-', props.number]),
+                ]);
             }
             function MyC3(props) {
                 return [
@@ -36,7 +44,7 @@
             class MyC extends Component {
                 constructor(props) {
                     super(props);
-                    this.state = { list: [1, 2, 3, 4, 5, 6] };
+                    this.state = { list: [1, 2, 3, 4] };
 
                     this.onClick = this.onClick.bind(this);
                 }
@@ -46,11 +54,19 @@
                 render() {
                     return createElement('div', { id: 'div1', class: 'div1' }, [
                         createElement('span', null, ['hello']),
-                        ...this.state.list.map((item) =>
-                            item % 2
-                                ? createElement(MyC2, { number: item })
-                                : createElement(MyC3, { number: item })
-                        ),
+                        createElement('div', null, [
+                            ...this.state.list.map((item) =>
+                                item % 2
+                                    ? createElement(MyC2, {
+                                          number: item,
+                                          key: item,
+                                      })
+                                    : createElement(MyC3, {
+                                          number: item,
+                                          key: item,
+                                      })
+                            ),
+                        ]),
                         createElement('div', null, [
                             createElement('button', { onClick: this.onClick }, [
                                 'set state',

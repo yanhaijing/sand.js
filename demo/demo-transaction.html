@@ -30,43 +30,68 @@
                 return createElement('div', null, [
                     createElement(MyC4, null),
                     createElement('', null, [1, 2, 3]),
-                    createElement('div', null, ['MyC2-', props.number]),
+                    createElement('div', null, ['MyC2-', props.count]),
                 ]);
             }
             function MyC3(props) {
-                return [
+                return createElement('', null, [
                     createElement('span', null, ['MyC3-']),
                     createElement('span', null, [
-                        createElement('span', null, props.number),
+                        createElement('span', null, props.count),
                     ]),
-                ];
+                ]);
             }
             class MyC extends Component {
                 constructor(props) {
                     super(props);
-                    this.state = { list: [1, 2, 3, 4] };
+                    this.state = { count: 1 };
 
                     this.onClick = this.onClick.bind(this);
                 }
                 onClick() {
-                    this.setState({ list: [...this.state.list.reverse()] });
+                    this.setState({ count: this.state.count + 1 });
                 }
                 render() {
+                    const { count } = this.state;
+                    let arr = [];
+                    if (count % 2) {
+                        arr = [
+                            createElement(MyC2, { count, key: 2 }),
+                            createElement(MyC3, { count, key: 3 }),
+                            createElement(
+                                'div',
+                                { key: 'div' },
+                                createElement('b', null, 'i am div-'),
+                                createElement('b', null, count)
+                            ),
+                            createElement(
+                                '',
+                                { key: 'empty' },
+                                createElement('b', null, 'i am empty-'),
+                                createElement('b', null, count)
+                            ),
+                        ];
+                    } else {
+                        arr = [
+                            createElement(
+                                '',
+                                { key: 'empty' },
+                                createElement('b', null, 'i am empty-'),
+                                createElement('i', null, count)
+                            ),
+                            createElement(
+                                'div',
+                                { key: 'div' },
+                                createElement('b', null, 'i am div-'),
+                                createElement('b', null, count)
+                            ),
+                            createElement(MyC3, { count, key: 3 }),
+                            createElement(MyC2, { count, key: 2 }),
+                        ];
+                    }
                     return createElement('div', { id: 'div1', class: 'div1' }, [
                         createElement('span', null, ['hello']),
-                        createElement('div', null, [
-                            ...this.state.list.map((item) =>
-                                item % 2
-                                    ? createElement(MyC2, {
-                                          number: item,
-                                          key: item,
-                                      })
-                                    : createElement(MyC3, {
-                                          number: item,
-                                          key: item,
-                                      })
-                            ),
-                        ]),
+                        createElement('div', null, arr),
                         createElement('div', null, [
                             createElement('button', { onClick: this.onClick }, [
                                 'set state',

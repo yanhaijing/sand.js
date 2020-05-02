@@ -181,12 +181,28 @@ export function diffChildren(
                 childvdom.element = child;
                 // 添加到事务
                 transaction.add((done) => {
+                    if (childvdom.element.key) {
+                        console.error(
+                            'task run receiveComponent',
+                            childvdom.element
+                        );
+                    } else {
+                        console.log(
+                            'task run receiveComponent',
+                            childvdom.element
+                        );
+                    }
                     childvdom.receiveComponent(done);
                 });
                 prevChild.used = true;
                 if (prevChild.index < lastIndex) {
                     // 添加到事务
                     transaction.add((done) => {
+                        if (childvdom.element.key) {
+                            console.error('task run appendTo', childvdom.element);
+                        } else {
+                            console.log('task run appendTo', childvdom.element);
+                        }
                         childvdom.appendTo(); // 移动到当前父元素的最后面
                         done();
                     });
@@ -222,6 +238,13 @@ export function diffChildren(
             newChildVdoms.push(childVdom);
         }
 
+        // 设置指针
+        if (curIndex > 0) {
+            newChildVdoms[curIndex].previousVdomSibling =
+                newChildVdoms[curIndex - 1];
+            newChildVdoms[curIndex - 1].nextVdomSibling =
+                newChildVdoms[curIndex];
+        }
         curIndex = curIndex + 1;
     }
     // 删除用不到的节点

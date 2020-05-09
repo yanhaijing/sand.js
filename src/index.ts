@@ -1,11 +1,11 @@
 import { omit } from './util/util';
-import { instantiateDOMComponent } from './vdom';
+import { instantiateDOMComponent, DOMRootComponent } from './vdom';
 import { SandElement } from './element';
 import { SandTagType, SandChildType, SandPropsType, SandKeyType } from './type';
 
 export function render(element: SandElement, container: HTMLElement) {
     const vdom = instantiateDOMComponent(element);
-    vdom.mountComponent(container);
+    vdom.mountComponent(new DOMRootComponent(container));
 }
 
 interface ConfigType {

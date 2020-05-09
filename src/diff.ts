@@ -143,7 +143,7 @@ function getChildKey(child: SandChildType, defaultKey: number) {
     return child instanceof SandElement ? child.key || defaultKey : defaultKey;
 }
 export function diffChildren(
-    dom: HTMLElement,
+    vdom: VdomType,
     curChildren: SandChildType[],
     nextChildren: SandChildType[],
     childVdoms: VdomType[],
@@ -216,7 +216,9 @@ export function diffChildren(
                     prevChild.index
                 ] as DOMTextComponent;
                 prevChild.used = true;
-                childvdom.receiveComponent(noop, child as string);
+                transaction.add((done) => {
+                    childvdom.receiveComponent(done, child as string);
+                });
                 newChildVdoms.push(childvdom);
             } else {
                 // 都是组件，组件类型不同时 | 文本->dom, dom -> 文本
@@ -224,7 +226,7 @@ export function diffChildren(
                 const childVdom = instantiateDOMComponent(child);
                 // 添加到事务
                 transaction.add((done) => {
-                    childVdom.mountComponent(dom, done);
+                    childVdom.mountComponent(vdom, done);
                 });
                 newChildVdoms.push(childVdom);
             }
@@ -233,12 +235,12 @@ export function diffChildren(
             const childVdom = instantiateDOMComponent(child);
             // 添加到事务
             transaction.add((done) => {
-                childVdom.mountComponent(dom, done);
+                childVdom.mountComponent(vdom, done);
             });
             newChildVdoms.push(childVdom);
         }
 
-        // 设置指针
+        // 设置节点指针
         if (curIndex > 0) {
             newChildVdoms[curIndex].previousVdomSibling =
                 newChildVdoms[curIndex - 1];

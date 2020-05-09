@@ -1,5 +1,5 @@
 import { instantiateDOMComponent, VdomType, DOMTextComponent } from './vdom';
-import { dash2camel, omit, propName2eventName, noop } from './util/util';
+import { dash2camel, omit, propName2eventName } from './util/util';
 import { SandPropsType, SandChildType } from './type';
 import { SandElement } from './element';
 import { Transaction, globalTaskQueue } from './queue';
@@ -179,8 +179,10 @@ export function diffChildren(
             ) {
                 const childvdom = childVdoms[prevChild.index];
                 childvdom.element = child;
+                childvdom.isDirty = true;
                 // 添加到事务
                 transaction.add((done) => {
+                    childvdom.isDirty = false;
                     childvdom.receiveComponent(done);
                 });
                 prevChild.used = true;
@@ -200,7 +202,9 @@ export function diffChildren(
                     prevChild.index
                 ] as DOMTextComponent;
                 prevChild.used = true;
+                childvdom.isDirty = true;
                 transaction.add((done) => {
+                    childvdom.isDirty = false;
                     childvdom.receiveComponent(done, child as string);
                 });
                 newChildVdoms.push(childvdom);

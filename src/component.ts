@@ -3,6 +3,13 @@ import { DOMCompositeComponent } from './vdom';
 import { SandElement } from './element';
 import { noop } from './util/util';
 
+export function mergeState(stateList: SandStateType[]) {
+    return  stateList.reduce(
+        (res, cur) => ({ ...res, ...cur }),
+        {}
+    ) as SandStateType;
+}
+
 export class Component {
     props: SandPropsType;
     state!: SandStateType;
@@ -31,20 +38,7 @@ export class Component {
         }
 
         setTimeout(() => {
-            // 合并state
-            const nextMixState = cacheStates.reduce(
-                (res, cur) => ({ ...res, ...cur }),
-                {}
-            ) as SandStateType;
-
-            this._sandVdomInstance.receiveComponent(noop, nextMixState);
-
-            this.setStateCallbacks.forEach((cb) => {
-                cb(nextMixState);
-            });
-
-            this.cacheStates = [];
-            this.setStateCallbacks = [];
+            this._sandVdomInstance.receiveComponent(noop);
         }, 0);
     }
     componentWillMount() {}

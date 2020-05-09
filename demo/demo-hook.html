@@ -19,15 +19,34 @@
         <script src="../node_modules/es5-shim/es5-sham.js"></script>
         <script src="../dist/index.aio.js"></script>
         <script>
-            const { Component, render, createElement, useState, useEffect } = sandjs;
+            const {
+                Component,
+                render,
+                createElement,
+                useState,
+                useEffect,
+            } = sandjs;
 
+            function MyC2() {
+                const [count, setCount] = useState(2);
+
+                return createElement('div', null, [
+                    'MyC2-',
+                    count,
+                    createElement(
+                        'button',
+                        { onClick: () => setCount(count + 1) },
+                        ['add MyC2']
+                    ),
+                ]);
+            }
             function MyC1() {
                 const [name, setName] = useState('yan');
                 const [age, setAge] = useState(42);
                 const [sex, setSex] = useState('男');
 
                 useEffect(() => {
-                    console.log('useEffect age', age)
+                    console.log('useEffect age', age);
                 });
 
                 useEffect(() => {
@@ -35,7 +54,7 @@
 
                     return () => {
                         console.log('useEffect2 clean');
-                    }
+                    };
                 });
 
                 return createElement('div', null, [
@@ -54,6 +73,7 @@
                             ['sub age']
                         ),
                     ]),
+                    createElement(MyC2),
                 ]);
             }
 

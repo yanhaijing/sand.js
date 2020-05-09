@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 // eslint-disable-next-line max-classes-per-file
 import { SandElement } from './element';
-import { Component } from './component';
+import { Component, mergeState } from './component';
 import { diffProps, diffChildren } from './diff';
-import { SandStateType, FunctionComponentType } from './type';
+import { FunctionComponentType } from './type';
 import {
     functionScopeStack,
     EffectFunctionType,
@@ -44,6 +44,7 @@ export class DOMTextComponent {
     element!: SandElement;
     previousVdomSibling?: VdomType;
     nextVdomSibling?: VdomType;
+    isDirty = false;
 
     constructor(text?: string | number) {
         this.text = text == null ? '' : String(text);
@@ -77,6 +78,7 @@ export class DOMTextComponent {
         done();
     }
     receiveComponent(done: DoneType, text?: string | number) {
+        this.isDirty = false;
         text = text == null ? '' : String(text);
         if (text !== this.text) {
             this.textNode.textContent = text;
@@ -97,6 +99,7 @@ export class DOMFragmentComponent {
     renderedElement!: SandElement;
     previousVdomSibling?: VdomType;
     nextVdomSibling?: VdomType;
+    isDirty = false;
 
     constructor(element: SandElement) {
         this.element = element;
@@ -149,6 +152,7 @@ export class DOMFragmentComponent {
         this.renderedElement = element;
     }
     receiveComponent(done: DoneType) {
+        this.isDirty = false;
         const { element, renderedElement } = this;
         const nextProps = element.props;
         const curProps = renderedElement.props;
@@ -182,6 +186,7 @@ export class DOMComponent {
     renderedElement!: SandElement;
     previousVdomSibling?: VdomType;
     nextVdomSibling?: VdomType;
+    isDirty = false;
 
     constructor(element: SandElement) {
         this.element = element;
@@ -232,6 +237,7 @@ export class DOMComponent {
         this.renderedElement = element;
     }
     receiveComponent(done: DoneType) {
+        this.isDirty = false;
         const { element, dom, renderedElement } = this;
         const nextProps = element.props;
         const curProps = renderedElement.props;
@@ -271,6 +277,7 @@ export class DOMFunctionComponent {
     effectCbList: EffectFunctionRetureType[] = [];
     previousVdomSibling?: VdomType;
     nextVdomSibling?: VdomType;
+    isDirty = false;
 
     constructor(element: SandElement) {
         this.element = element;
@@ -343,8 +350,12 @@ export class DOMFunctionComponent {
         this.vdoms = nextVdoms;
     }
     receiveComponent(done: DoneType) {
-        const { element, renderedElements, vdoms } = this;
+        const { element, renderedElements, vdoms, isDirty } = this;
 
+        // 如果当前组件在待更新队列中，不执行
+        if (isDirty) {
+            return;
+        }
         const component = element.type as FunctionComponentType;
         const nextProps = element.props;
 
@@ -393,6 +404,7 @@ export class DOMCompositeComponent {
     renderedElements: SandElement[] = []; // 当前渲染的元素
     previousVdomSibling?: VdomType;
     nextVdomSibling?: VdomType;
+    isDirty = false;
 
     constructor(element: SandElement) {
         this.element = element;
@@ -456,10 +468,22 @@ export class DOMCompositeComponent {
         // parent.append(this);
         this.vdoms = nextVdoms;
     }
-    receiveComponent(done: DoneType, newState?: SandStateType) {
-        const { componentInstance, element, renderedElements, vdoms } = this;
+    receiveComponent(done: DoneType) {
+        const {
+            componentInstance,
+            element,
+            renderedElements,
+            vdoms,
+            isDirty,
+        } = this;
 
-        const nextState = { ...componentInstance.state, ...newState };
+        // 如果当前组件在待更新队列中，不执行
+        if (isDirty) {
+            return;
+        }
+
+        const { state, cacheStates, setStateCallbacks } = componentInstance;
+        const nextState = mergeState([state, ...cacheStates]);
         const nextProps = element.props;
 
         componentInstance.componentWillReceiveProps(nextProps);
@@ -494,6 +518,13 @@ export class DOMCompositeComponent {
         );
 
         this.vdoms = nextVdoms;
+
+        // 处理组件state
+        setStateCallbacks.forEach((cb) => {
+            cb(nextState);
+        });
+        componentInstance.cacheStates = [];
+        componentInstance.setStateCallbacks = [];
     }
     unmountComponent() {
         const { vdoms, componentInstance } = this;

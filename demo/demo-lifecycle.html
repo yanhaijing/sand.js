@@ -19,35 +19,63 @@
         <script src="../node_modules/es5-shim/es5-sham.js"></script>
         <script src="../dist/index.aio.js"></script>
         <script>
-            const {Component, render, createElement} = sandjs;
+            const { Component, render, createElement } = sandjs;
         </script>
         <script>
             class Component2 extends Component {
+                constructor(props) {
+                    super(props);
+                    this.state = { number: 1 };
+
+                    this.onAdd = this.onAdd.bind(this);
+                }
                 componentWillMount() {
-                    console.log('Component2 componentWillMount')
+                    console.log('Component2 componentWillMount');
                 }
                 componentDidMount() {
-                    console.log('Component2 componentDidMount')
+                    console.log('Component2 componentDidMount');
                 }
                 componentWillUnmount() {
-                    console.log('Component2 componentWillUnmount')
+                    console.log('Component2 componentWillUnmount');
                 }
                 componentWillReceiveProps(nextProps) {
-                    console.log('Component2 componentWillReceiveProps', nextProps)
+                    console.log(
+                        'Component2 componentWillReceiveProps',
+                        nextProps
+                    );
                 }
                 shouldComponentUpdate(nextProps, newState) {
-                    console.log('Component2 shouldComponentUpdate', nextProps, newState);
+                    console.log(
+                        'Component2 shouldComponentUpdate',
+                        nextProps,
+                        newState
+                    );
                     return true;
                 }
                 componentWillUpdate() {
-                    console.log('Component2 componentWillUpdate')
+                    console.log('Component2 componentWillUpdate');
                 }
                 componentDidUpdate() {
-                    console.log('Component2 componentDidUpdate')
+                    console.log('Component2 componentDidUpdate');
+                }
+                onAdd() {
+                    this.setState({
+                        number: this.state.number + 1,
+                    });
                 }
                 render() {
-                    console.log('Component2 render', this.props)
-                    return createElement("div", null, [this.props.number]);
+                    console.log('Component2 render', this.props);
+                    return createElement('div', null, [
+                        'props.number: ',
+                        this.props.number,
+                        ' | state.number: ',
+                        this.state.number,
+                        createElement('div', null, [
+                            createElement('button', { onClick: this.onAdd }, [
+                                '增加 Component2',
+                            ]),
+                        ]),
+                    ]);
                 }
             }
             class Component1 extends Component {
@@ -58,26 +86,33 @@
                     this.onAdd = this.onAdd.bind(this);
                 }
                 componentWillMount() {
-                    console.log('Component1 componentWillMount')
+                    console.log('Component1 componentWillMount');
                 }
                 componentDidMount() {
-                    console.log('Component1 componentDidMount')
+                    console.log('Component1 componentDidMount');
                 }
                 componentWillUnmount() {
-                    console.log('Component1 componentWillUnmount')
+                    console.log('Component1 componentWillUnmount');
                 }
                 componentWillReceiveProps(nextProps) {
-                    console.log('Component1 componentWillReceiveProps', nextProps)
+                    console.log(
+                        'Component1 componentWillReceiveProps',
+                        nextProps
+                    );
                 }
                 shouldComponentUpdate(nextProps, newState) {
-                    console.log('Component1 shouldComponentUpdate', nextProps, newState);
+                    console.log(
+                        'Component1 shouldComponentUpdate',
+                        nextProps,
+                        newState
+                    );
                     return true;
                 }
                 componentWillUpdate() {
-                    console.log('Component1 componentWillUpdate')
+                    console.log('Component1 componentWillUpdate');
                 }
                 componentDidUpdate() {
-                    console.log('Component1 componentDidUpdate')
+                    console.log('Component1 componentDidUpdate');
                 }
                 onAdd() {
                     this.setState({
@@ -86,19 +121,20 @@
                 }
                 render() {
                     const { number } = this.state;
-                    console.log('Component1 render', number)
+                    console.log('Component1 render', number);
                     return createElement(
-                        "div",
-                        { id: "div1", class: "div1" + number },
+                        'div',
+                        { id: 'div1', class: 'div1' + number },
                         [
-                            createElement(Component2, { number }),
-                            createElement("div", null, [
+                            createElement('h3', null, 'Component1'),
+                            createElement('div', null, [
                                 createElement(
-                                    "button",
+                                    'button',
                                     { onClick: this.onAdd },
-                                    ["增加"]
+                                    ['增加 Component1']
                                 ),
                             ]),
+                            createElement(Component2, { number }),
                         ]
                     );
                 }
@@ -106,7 +142,7 @@
 
             render(
                 createElement(Component1, null, []),
-                document.getElementById("container")
+                document.getElementById('container')
             );
         </script>
     </body>

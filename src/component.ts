@@ -53,7 +53,8 @@ export class Component {
     componentWillUpdate() {}
     componentDidUpdate() {}
     forceUpdate() {
-        throw new Error('Component forceUpdate need TODO');
+        this._sandVdomInstance.isForceUpdate = true;
+        this._sandVdomInstance.receiveComponent(noop);
     }
     render(): SandElement | SandElement[] | null {
         throw new Error('Sand Component need render method');

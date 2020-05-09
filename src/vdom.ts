@@ -405,6 +405,7 @@ export class DOMCompositeComponent {
     previousVdomSibling?: VdomType;
     nextVdomSibling?: VdomType;
     isDirty = false;
+    isForceUpdate = false;
 
     constructor(element: SandElement) {
         this.element = element;
@@ -475,6 +476,7 @@ export class DOMCompositeComponent {
             renderedElements,
             vdoms,
             isDirty,
+            isForceUpdate,
         } = this;
 
         // 如果当前组件在待更新队列中，不执行
@@ -491,7 +493,8 @@ export class DOMCompositeComponent {
         componentInstance.state = nextState;
         componentInstance.props = nextProps;
 
-        if (!componentInstance.shouldComponentUpdate(nextProps, nextState)) {
+        // 强制更新时，绕过shouldComponentUpdate
+        if (!isForceUpdate && !componentInstance.shouldComponentUpdate(nextProps, nextState)) {
             return;
         }
 
@@ -525,6 +528,7 @@ export class DOMCompositeComponent {
         });
         componentInstance.cacheStates = [];
         componentInstance.setStateCallbacks = [];
+        this.isForceUpdate = false;
     }
     unmountComponent() {
         const { vdoms, componentInstance } = this;

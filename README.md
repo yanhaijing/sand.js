@@ -14,6 +14,7 @@ Build the world with sand.js, a UI framework like reactjs
 - 支持组件，支持生命周期函数
 - 支持函数式组件，支持hook函数
 - 支持fragment，支持render返回数组
+- 支持JSX
 - diff过程可中断，不阻塞
 - 兼容IE8
 

@@ -248,8 +248,7 @@ export class DOMComponent {
         );
     }
     unmountComponent() {
-        const { parent, childVdoms, dom } = this;
-        console.log('unmountComponent', parent, dom);
+        const { parent, childVdoms } = this;
 
         for (const child of childVdoms) {
             child.unmountComponent();

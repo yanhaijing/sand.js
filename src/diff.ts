@@ -181,28 +181,12 @@ export function diffChildren(
                 childvdom.element = child;
                 // 添加到事务
                 transaction.add((done) => {
-                    if (childvdom.element.key) {
-                        console.error(
-                            'task run receiveComponent',
-                            childvdom.element
-                        );
-                    } else {
-                        console.log(
-                            'task run receiveComponent',
-                            childvdom.element
-                        );
-                    }
                     childvdom.receiveComponent(done);
                 });
                 prevChild.used = true;
                 if (prevChild.index < lastIndex) {
                     // 添加到事务
                     transaction.add((done) => {
-                        if (childvdom.element.key) {
-                            console.error('task run appendTo', childvdom.element);
-                        } else {
-                            console.log('task run appendTo', childvdom.element);
-                        }
                         vdom.append(childvdom); // 移动到当前父元素的最后面
                         done();
                     });

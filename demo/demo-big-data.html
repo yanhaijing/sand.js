@@ -4,11 +4,18 @@
         <meta charset="UTF-8" />
         <title>Document</title>
         <style>
+            div {
+                padding: 5px;
+                margin: 5px;
+            }
             .div11 {
                 background: red;
             }
             .div12 {
                 background: green;
+            }
+            .myc2 {
+                column-count: 10;
             }
         </style>
     </head>
@@ -21,17 +28,21 @@
         <script>
             const { Component, render, createElement } = sandjs;
             function MyC2(props) {
-                return createElement('div', null, [
-                    createElement('h4', null, props.children),
-                    ...[...Array(1000)].map((v, k) =>
-                        createElement('div', null, [k])
-                    ),
-                ]);
+                return createElement(
+                    'div',
+                    { style: { outline: '1px dashed green' }, class: 'myc2' },
+                    [
+                        createElement('b', null, props.children),
+                        ...[...Array(40)]
+                            .map((v, k) => createElement('div', null, [k]))
+                            .reverse(),
+                    ]
+                );
             }
             class MyC extends Component {
                 constructor(props) {
                     super(props);
-                    this.state = { number: 100 };
+                    this.state = { number: 1000 };
 
                     this.onAdd = this.onAdd.bind(this);
                     this.onDec = this.onDec.bind(this);
@@ -54,23 +65,33 @@
                 }
                 render() {
                     const { number } = this.state;
-                    return createElement('div', null, [
-                        createElement('div', null, [
-                            createElement('button', { onClick: this.onAdd }, [
-                                '增加',
+                    return createElement(
+                        'div',
+                        { style: { outline: '1px dashed red' } },
+                        [
+                            createElement('div', null, [
+                                createElement(
+                                    'button',
+                                    { onClick: this.onAdd },
+                                    ['增加']
+                                ),
+                                createElement(
+                                    'button',
+                                    { onClick: this.onDec },
+                                    ['减少']
+                                ),
+                                createElement(
+                                    'div',
+                                    null,
+                                    [...Array(number)]
+                                        .map((v, k) =>
+                                            createElement(MyC2, null, [k])
+                                        )
+                                        .reverse()
+                                ),
                             ]),
-                            createElement('button', { onClick: this.onDec }, [
-                                '减少',
-                            ]),
-                            createElement(
-                                'div',
-                                null,
-                                [...Array(number)].map((v, k) =>
-                                    createElement(MyC2, null, [k])
-                                )
-                            ),
-                        ]),
-                    ]);
+                        ]
+                    );
                 }
             }
 

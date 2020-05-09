@@ -4,11 +4,9 @@
         <meta charset="UTF-8" />
         <title>Document</title>
         <style>
-            .div11 {
-                background: red;
-            }
-            .div12 {
-                background: green;
+            div {
+                padding: 5px;
+                margin: 5px;
             }
         </style>
     </head>
@@ -21,26 +19,37 @@
         <script>
             const { Component, render, createElement } = sandjs;
             function MyC4(props) {
-                return createElement('div', null, [
-                    createElement('div', null, ['MyC4']),
-                ]);
+                return createElement(
+                    'div',
+                    { style: { outline: '1px solid maroon' } },
+                    [createElement('div', null, ['MyC4'])]
+                );
             }
 
             function MyC2(props) {
-                return createElement('div', null, [
-                    createElement(MyC4, null),
-                    // createElement('', null, [1, 2, 3]),
-                    createElement('div', null, ['MyC2-', props.count]),
-                ]);
+                return createElement(
+                    'div',
+                    { style: { outline: '1px solid green' } },
+                    [
+                        createElement(MyC4, null),
+                        createElement('', null, [1, 2, 3]),
+                        createElement('div', null, ['MyC2-', props.count]),
+                    ]
+                );
             }
             function MyC3(props) {
-                return createElement('div', null, 'MyC3');
-                // return createElement('', null, [
-                //     createElement('span', null, ['MyC3-']),
-                //     createElement('span', null, [
-                //         createElement('span', null, props.count),
-                //     ]),
-                // ]);
+                return createElement('', null, [
+                    createElement(
+                        'div',
+                        { style: { outline: '1px solid blue' } },
+                        [
+                            createElement('span', null, ['MyC3-']),
+                            createElement('span', null, [
+                                createElement('span', null, props.count),
+                            ]),
+                        ]
+                    ),
+                ]);
             }
             class MyC extends Component {
                 constructor(props) {
@@ -61,13 +70,18 @@
                             createElement(MyC3, { count, key: 3 }),
                             createElement(
                                 'div',
-                                { key: 'div' },
+                                {
+                                    key: 'div',
+                                    style: { outline: '1px solid red' },
+                                },
                                 createElement('b', null, 'i am div-'),
                                 createElement('b', null, count)
                             ),
                             createElement(
                                 '',
-                                { key: 'empty' },
+                                {
+                                    key: 'empty',
+                                },
                                 createElement('b', null, 'i am empty-'),
                                 createElement('b', null, count)
                             ),
@@ -76,13 +90,18 @@
                         arr = [
                             createElement(
                                 '',
-                                { key: 'empty' },
+                                {
+                                    key: 'empty',
+                                },
                                 createElement('b', null, 'i am empty-'),
                                 createElement('i', null, count)
                             ),
                             createElement(
                                 'div',
-                                { key: 'div' },
+                                {
+                                    key: 'div',
+                                    style: { outline: '1px solid red' },
+                                },
                                 createElement('b', null, 'i am div-'),
                                 createElement('b', null, count)
                             ),
@@ -90,15 +109,29 @@
                             createElement(MyC2, { count, key: 2 }),
                         ];
                     }
-                    return createElement('div', { id: 'div1', class: 'div1' }, [
-                        createElement('span', null, ['hello']),
-                        createElement('div', null, arr),
-                        createElement('div', null, [
-                            createElement('button', { onClick: this.onClick }, [
-                                'set state',
-                            ]),
-                        ]),
-                    ]);
+                    return createElement(
+                        'div',
+                        {
+                            id: 'div1',
+                            class: 'div1',
+                            style: { outline: '1px dashed red' },
+                        },
+                        [
+                            createElement('span', null, ['hello']),
+                            createElement('div', null, arr),
+                            createElement(
+                                'div',
+                                { style: { outline: '1px solid green' } },
+                                [
+                                    createElement(
+                                        'button',
+                                        { onClick: this.onClick },
+                                        ['set state']
+                                    ),
+                                ]
+                            ),
+                        ]
+                    );
                 }
             }
 

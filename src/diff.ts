@@ -203,7 +203,7 @@ export function diffChildren(
                         } else {
                             console.log('task run appendTo', childvdom.element);
                         }
-                        childvdom.appendTo(); // 移动到当前父元素的最后面
+                        vdom.append(childvdom); // 移动到当前父元素的最后面
                         done();
                     });
                 } else {

@@ -67,17 +67,12 @@ export class DOMTextComponent {
     ) {
         /** 叶子节点 do nothing */
     }
-    appendTo(parent = this.parent) {
-        if (this.textNode) {
-            parent.append(this);
-        }
-
-        this.parent = parent;
-    }
     mountComponent(parent: VdomType | DOMRootComponent, done: DoneType = noop) {
+        this.parent = parent;
+
         const textNode = document.createTextNode(this.text);
         this.textNode = textNode;
-        this.parent = parent;
+
         parent.append(this);
         done();
     }
@@ -127,19 +122,17 @@ export class DOMFragmentComponent {
     ) {
         this.parent.insertBefore(newItem, existingItem);
     }
-    appendTo(parent = this.parent) {
-        for (const vdom of this.childVdoms) {
-            vdom.appendTo(parent);
-        }
-        this.parent = parent;
-    }
     mountComponent(parent: VdomType | DOMRootComponent, done: DoneType = noop) {
+        this.parent = parent;
+
         const { element } = this;
         const { props } = element;
 
         const lastPlaceholderDom = document.createComment(
             'DOMFragmentComponent lastPlaceholderDom'
         );
+        this.lastPlaceholderDom = lastPlaceholderDom;
+        parent.append(lastPlaceholderDom);
 
         this.childVdoms = diffChildren(
             this,
@@ -151,9 +144,8 @@ export class DOMFragmentComponent {
             }
         ); // 旧孩子设置为空，相当于全部设置为新的
 
-        parent.append(this);
-        this.parent = parent;
-        this.lastPlaceholderDom = lastPlaceholderDom;
+        // parent.append(this);
+
         this.renderedElement = element;
     }
     receiveComponent(done: DoneType) {
@@ -215,19 +207,15 @@ export class DOMComponent {
             this.dom.insertBefore(dom, existingItem);
         });
     }
-    appendTo(parent = this.parent) {
-        if (this.dom) {
-            parent.append(this);
-        }
-
-        this.parent = parent;
-    }
     mountComponent(parent: VdomType | DOMRootComponent, done: DoneType = noop) {
+        this.parent = parent;
+
         const { element } = this;
         const tagName = element.type as string;
         const { props } = element;
 
         const dom = document.createElement(tagName);
+        this.dom = dom;
 
         diffProps(dom, { children: [] }, props); // 旧的属性设置为空，相当于全部设置为新的
 
@@ -241,8 +229,6 @@ export class DOMComponent {
 
         parent.append(this);
 
-        this.parent = parent;
-        this.dom = dom;
         this.renderedElement = element;
     }
     receiveComponent(done: DoneType) {
@@ -311,10 +297,6 @@ export class DOMFunctionComponent {
     ) {
         this.parent.insertBefore(newItem, existingItem);
     }
-    appendTo(parent = this.parent) {
-        this.vdoms.forEach((vdom) => vdom.appendTo(parent));
-        this.parent = parent;
-    }
     callEffect() {
         this.effectList.forEach((cb) => {
             const res = cb();
@@ -326,6 +308,8 @@ export class DOMFunctionComponent {
         });
     }
     mountComponent(parent: VdomType | DOMRootComponent, done: DoneType = noop) {
+        this.parent = parent;
+
         const { element } = this;
         const component = element.type as FunctionComponentType;
         const { props } = element;
@@ -333,6 +317,8 @@ export class DOMFunctionComponent {
         const lastPlaceholderDom = document.createComment(
             'DOMFunctionComponent lastPlaceholderDom'
         );
+        this.lastPlaceholderDom = lastPlaceholderDom;
+        parent.append(lastPlaceholderDom);
 
         functionScopeStack.push(this);
         this.stateCursor = 0;
@@ -354,9 +340,7 @@ export class DOMFunctionComponent {
             done();
         });
 
-        parent.append(this);
-        this.lastPlaceholderDom = lastPlaceholderDom;
-        this.parent = parent;
+        // parent.append(this);
         this.vdoms = nextVdoms;
     }
     receiveComponent(done: DoneType) {
@@ -435,11 +419,9 @@ export class DOMCompositeComponent {
     ) {
         this.parent.insertBefore(newItem, existingItem);
     }
-    appendTo(parent = this.parent) {
-        this.vdoms.forEach((vdom) => vdom.appendTo(parent));
-        this.parent = parent;
-    }
     mountComponent(parent: VdomType | DOMRootComponent, done: DoneType = noop) {
+        this.parent = parent;
+
         const { element } = this;
 
         const TagComponent = (element.type as unknown) as typeof Component;
@@ -448,7 +430,7 @@ export class DOMCompositeComponent {
         const lastPlaceholderDom = document.createComment(
             'DOMCompositeComponent lastPlaceholderDom'
         );
-
+        this.lastPlaceholderDom = lastPlaceholderDom;
         parent.append(lastPlaceholderDom);
 
         const componentInstance = new TagComponent(props);
@@ -472,9 +454,7 @@ export class DOMCompositeComponent {
             componentInstance.componentDidMount();
         });
 
-        parent.append(this);
-        this.parent = parent;
-        this.lastPlaceholderDom = lastPlaceholderDom;
+        // parent.append(this);
         this.vdoms = nextVdoms;
     }
     receiveComponent(done: DoneType, newState?: SandStateType) {

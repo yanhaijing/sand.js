@@ -14,3 +14,11 @@
 - [ ] 支持事件代理
 - [ ] 支持refs
 - [ ] 支持dangerouslySetInnerHTML
+- [ ] 兼容IE8
+- [ ] 提供sand-cli工具
+- [ ] 提供sand babel插件
+- [ ] 提供sand 编辑器插件
+- [ ] 支持webcomponents
+- [ ] 支持react组件
+- [ ] 支持angular组件
+- [ ] 支持vue组件

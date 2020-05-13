@@ -15,6 +15,7 @@
 - [ ] 支持refs
 - [ ] 支持dangerouslySetInnerHTML
 - [ ] 兼容IE8
+- [ ] 支持SSR
 - [ ] 提供sand-cli工具
 - [ ] 提供sand babel插件
 - [ ] 提供sand 编辑器插件

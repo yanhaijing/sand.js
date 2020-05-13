@@ -16,6 +16,8 @@
 - [ ] 支持dangerouslySetInnerHTML
 - [ ] 兼容IE8
 - [ ] 支持SSR
+- [ ] 增加单测
+- [ ] 添加对组件的测试支持
 - [ ] 提供sand-cli工具
 - [ ] 提供sand babel插件
 - [ ] 提供sand 编辑器插件

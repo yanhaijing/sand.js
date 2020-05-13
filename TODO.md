@@ -12,3 +12,5 @@
 - [X] 支持hook函数
 - [X] 支持fragment
 - [ ] 支持事件代理
+- [ ] 支持refs
+- [ ] 支持dangerouslySetInnerHTML

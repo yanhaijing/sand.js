@@ -11,6 +11,7 @@
 - [X]] 当前组件在队列中，hook函数不再触发重新检测
 - [X] 支持hook函数
 - [X] 支持fragment
+- [ ] 区分macro和micro queue，保证先触发的渲染 渲染完毕，才处理后触发的渲染
 - [ ] 支持事件代理
 - [ ] 支持refs
 - [ ] 支持dangerouslySetInnerHTML

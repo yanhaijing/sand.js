@@ -1,4 +1,4 @@
-import { instantiateDOMComponent, VdomType, DOMTextComponent } from './vdom';
+import { instantiateDOMComponent, VdomType, DOMTextComponent, DOMComponent } from './vdom';
 import { dash2camel, omit, propName2eventName } from './util/util';
 import { SandPropsType, SandChildType } from './type';
 import { SandElement } from './element';
@@ -84,10 +84,11 @@ export function setProp(
 }
 
 export function diffProps(
-    dom: HTMLElement,
+    vdom: DOMComponent,
     curProps: SandPropsType,
     nextProps: SandPropsType
 ) {
+    const dom = vdom.dom;
     const mixProps = omit({ ...curProps, ...nextProps }, [
         'children',
     ]) as SandPropsType;
@@ -98,33 +99,33 @@ export function diffProps(
             break;
         }
 
+        const isEvent = propName[0] === 'o' && propName[1] === 'n';
+
         const prop = mixProps[propName];
         // 需要移除的属性
-        if (!nextProps[propName]) {
-            if (/^on[A-Za-z]/.test(propName)) {
-                dom.removeEventListener(propName2eventName(propName), prop);
+        if (!(propName in nextProps)) {
+            if (isEvent) {
+                vdom.removeEventListener(propName2eventName(propName));
             } else {
                 setProp(dom, propName);
             }
+            break;
         }
 
         // 新增加的属性
-        if (!curProps[propName]) {
-            if (/^on[A-Za-z]/.test(propName)) {
-                dom.addEventListener(propName2eventName(propName), prop);
+        if (!(propName in curProps)) {
+            if (isEvent) {
+                vdom.addEventListener(propName2eventName(propName), prop);
             } else {
                 setProp(dom, propName, prop);
             }
+            break;
         }
 
         // 要更新的属性
         if (curProps[propName] !== nextProps[propName]) {
-            if (/^on[A-Za-z]/.test(propName)) {
-                dom.removeEventListener(
-                    propName2eventName(propName),
-                    curProps[propName]
-                );
-                dom.addEventListener(propName2eventName(propName), prop);
+            if (isEvent) {
+                vdom.addEventListener(propName2eventName(propName), prop);
             } else {
                 setProp(dom, propName, prop);
             }

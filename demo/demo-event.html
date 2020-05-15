@@ -19,7 +19,7 @@
         <script src="../node_modules/es5-shim/es5-sham.js"></script>
         <script src="../dist/index.aio.js"></script>
         <script>
-            const {Component, render, createElement} = sandjs;
+            const { Component, render, createElement } = sandjs;
         </script>
         <script>
             class MyC extends Component {
@@ -54,23 +54,20 @@
                 }
                 render() {
                     const { number } = this.state;
-                    return createElement("div", { id: "div1", class: "div1" }, [
-                        createElement("div", null, [
-                            createElement(
-                                "button",
-                                {
-                                    onClick:
-                                        number === -1
-                                            ? undefined
-                                            : this.testlist[number],
-                                },
-                                ["点击测试log"]
-                            ),
-                            createElement("button", { onClick: this.onAdd }, [
-                                "下一个函数",
+                    const props = {};
+
+                    if (number !== -1) {
+                        props.onClick = this.testlist[number];
+                    }
+
+                    return createElement('div', { id: 'div1', class: 'div1' }, [
+                        createElement('div', null, [
+                            createElement('button', props, ['点击测试log']),
+                            createElement('button', { onClick: this.onAdd }, [
+                                '下一个函数',
                             ]),
-                            createElement("button", { onClick: this.onDel }, [
-                                "删除函数",
+                            createElement('button', { onClick: this.onDel }, [
+                                '删除函数',
                             ]),
                         ]),
                     ]);
@@ -79,7 +76,7 @@
 
             render(
                 createElement(MyC, null, []),
-                document.getElementById("container")
+                document.getElementById('container')
             );
         </script>
     </body>

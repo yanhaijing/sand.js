@@ -187,9 +187,11 @@ export class DOMComponent {
     previousVdomSibling?: VdomType;
     nextVdomSibling?: VdomType;
     isDirty = false;
+    private listenterMap: { [key: string]: Function } = {};
 
     constructor(element: SandElement) {
         this.element = element;
+        this.eventProxy = this.eventProxy.bind(this);
     }
     getNativeDoms() {
         return this.dom ? [this.dom] : [];
@@ -212,6 +214,26 @@ export class DOMComponent {
             this.dom.insertBefore(dom, existingItem);
         });
     }
+    addEventListener(eventName: string, fn: Function) {
+        const { dom, eventProxy, listenterMap } = this;
+
+        if (typeof fn !== 'function') return;
+
+        if (!listenterMap[eventName]) {
+            dom.addEventListener(eventName, eventProxy);
+        }
+
+        listenterMap[eventName] = fn;
+    }
+    removeEventListener(eventName: string) {
+        const { dom, eventProxy, listenterMap } = this;
+        delete listenterMap[eventName];
+        dom.removeEventListener(eventName, eventProxy);
+    }
+    eventProxy(e: Event) {
+        const fn = this.listenterMap[e.type];
+        fn.call(e.target, e);
+    }
     mountComponent(parent: VdomType | DOMRootComponent, done: DoneType = noop) {
         this.parent = parent;
 
@@ -222,7 +244,7 @@ export class DOMComponent {
         const dom = document.createElement(tagName);
         this.dom = dom;
 
-        diffProps(dom, { children: [] }, props); // 旧的属性设置为空，相当于全部设置为新的
+        diffProps(this, { children: [] }, props); // 旧的属性设置为空，相当于全部设置为新的
 
         this.childVdoms = diffChildren(
             this,
@@ -238,13 +260,13 @@ export class DOMComponent {
     }
     receiveComponent(done: DoneType) {
         this.isDirty = false;
-        const { element, dom, renderedElement } = this;
+        const { element, renderedElement } = this;
         const nextProps = element.props;
         const curProps = renderedElement.props;
 
         this.renderedElement = element;
 
-        diffProps(dom, curProps, nextProps);
+        diffProps(this, curProps, nextProps);
         this.childVdoms = diffChildren(
             this,
             curProps.children,
@@ -494,7 +516,10 @@ export class DOMCompositeComponent {
         componentInstance.props = nextProps;
 
         // 强制更新时，绕过shouldComponentUpdate
-        if (!isForceUpdate && !componentInstance.shouldComponentUpdate(nextProps, nextState)) {
+        if (
+            !isForceUpdate &&
+            !componentInstance.shouldComponentUpdate(nextProps, nextState)
+        ) {
             return;
         }
 

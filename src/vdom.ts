@@ -257,6 +257,10 @@ export class DOMComponent {
         parent.append(this);
 
         this.renderedElement = element;
+
+        if (typeof props.ref === 'function') {
+            props.ref(dom);
+        }
     }
     receiveComponent(done: DoneType) {
         this.isDirty = false;
@@ -488,8 +492,11 @@ export class DOMCompositeComponent {
             componentInstance.componentDidMount();
         });
 
-        // parent.append(this);
         this.vdoms = nextVdoms;
+
+        if (typeof props.ref === 'function') {
+            props.ref(componentInstance);
+        }
     }
     receiveComponent(done: DoneType) {
         const {

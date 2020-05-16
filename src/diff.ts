@@ -1,5 +1,10 @@
-import { instantiateDOMComponent, VdomType, DOMTextComponent, DOMComponent } from './vdom';
-import { dash2camel, omit, propName2eventName } from './util/util';
+import {
+    instantiateDOMComponent,
+    VdomType,
+    DOMTextComponent,
+    DOMComponent,
+} from './vdom';
+import { dash2camel, propName2eventName } from './util/util';
 import { SandPropsType, SandChildType } from './type';
 import { SandElement } from './element';
 import { Transaction, globalTaskQueue } from './queue';
@@ -89,13 +94,11 @@ export function diffProps(
     nextProps: SandPropsType
 ) {
     const dom = vdom.dom;
-    const mixProps = omit({ ...curProps, ...nextProps }, [
-        'children',
-    ]) as SandPropsType;
+    const mixProps = { ...curProps, ...nextProps } as SandPropsType;
 
     // 更新属性
     for (const propName of Object.keys(mixProps)) {
-        if (propName === 'children') {
+        if (propName === 'children' || propName === 'ref') {
             break;
         }
 

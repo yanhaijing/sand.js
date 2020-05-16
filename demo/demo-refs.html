@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Document</title>
+        <style>
+            .div11 {
+                background: red;
+            }
+            .div12 {
+                background: green;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>demo</h1>
+        <div id="container"></div>
+        <script src="../node_modules/es5-shim/es5-shim.js"></script>
+        <script src="../node_modules/es5-shim/es5-sham.js"></script>
+        <script src="../dist/index.aio.js"></script>
+        <script>
+            const { Component, render, createElement } = sandjs;
+
+            class MyC2 extends Component {
+                render() {
+                    return createElement('div', null, [
+                        ...this.props.children,
+                        createElement('div', null, ['MyC2']),
+                    ]);
+                }
+            }
+
+            class MyC1 extends Component {
+                ref1 = null;
+                ref2 = null;
+                componentDidMount() {
+                    console.log('Component componentDidMount', this.ref1, this.ref2);
+                }
+                render() {
+                    return createElement(
+                        MyC2,
+                        {
+                            ref: (ref) => (this.ref1 = ref),
+                        },
+                        [
+                            createElement(
+                                'div',
+                                {
+                                    ref: (ref) => (this.ref2 = ref),
+                                },
+                                ['MyC1']
+                            ),
+                        ]
+                    );
+                }
+            }
+
+            render(
+                createElement(MyC1, null, []),
+                document.getElementById('container')
+            );
+        </script>
+    </body>
+</html>

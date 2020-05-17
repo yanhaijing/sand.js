@@ -206,6 +206,15 @@ export class DOMComponent {
             this.dom.removeChild(dom);
         });
     }
+    emptyDom() {
+        const { dom } = this;
+        dom.innerHTML = '';
+    }
+    empty() {
+        this.childVdoms.forEach(child => {
+            child.unmountComponent();
+        });
+    }
     insertBefore(
         newItem: VdomType | NativeDomType,
         existingItem: NativeDomType
@@ -244,40 +253,63 @@ export class DOMComponent {
         const dom = document.createElement(tagName);
         this.dom = dom;
 
+        if (typeof props.ref === 'function') {
+            props.ref(dom);
+        }
+
         diffProps(this, { children: [] }, props); // 旧的属性设置为空，相当于全部设置为新的
 
-        this.childVdoms = diffChildren(
-            this,
-            [],
-            props.children,
-            this.childVdoms,
-            done
-        ); // 旧孩子设置为空，相当于全部设置为新的
+        if (typeof props.dangerouslySetInnerHTML === 'object') {
+            dom.innerHTML = props.dangerouslySetInnerHTML.__html;
+            props.children = []; // 忽略子节点
+        } else {
+            this.childVdoms = diffChildren(
+                this,
+                [],
+                props.children,
+                this.childVdoms,
+                done
+            ); // 旧孩子设置为空，相当于全部设置为新的
+        }
 
         parent.append(this);
 
         this.renderedElement = element;
-
-        if (typeof props.ref === 'function') {
-            props.ref(dom);
-        }
     }
     receiveComponent(done: DoneType) {
         this.isDirty = false;
-        const { element, renderedElement } = this;
+        const { element, renderedElement, dom } = this;
         const nextProps = element.props;
         const curProps = renderedElement.props;
 
         this.renderedElement = element;
 
         diffProps(this, curProps, nextProps);
-        this.childVdoms = diffChildren(
-            this,
-            curProps.children,
-            nextProps.children,
-            this.childVdoms,
-            done
-        );
+
+        if (typeof nextProps.dangerouslySetInnerHTML === 'object') {
+            if (
+                typeof curProps.dangerouslySetInnerHTML !== 'object' ||
+                nextProps.dangerouslySetInnerHTML.__html !==
+                    curProps.dangerouslySetInnerHTML.__html
+            ) {
+                if (typeof curProps.dangerouslySetInnerHTML !== 'object') {
+                    this.empty(); // 回收上次渲染的vdom
+                }
+                nextProps.children = []; // 忽略子节点
+                dom.innerHTML = nextProps.dangerouslySetInnerHTML.__html;
+            }
+        } else {
+            if (typeof curProps.dangerouslySetInnerHTML === 'object') {
+                this.emptyDom(); // 清空上次渲染的 innerHTML
+            }
+            this.childVdoms = diffChildren(
+                this,
+                curProps.children,
+                nextProps.children,
+                this.childVdoms,
+                done
+            );
+        }
     }
     unmountComponent() {
         const { parent, childVdoms } = this;

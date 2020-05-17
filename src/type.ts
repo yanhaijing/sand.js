@@ -16,6 +16,7 @@ export type SandChildType = number | string | SandElement;
 export interface SandPropsType {
     children: SandChildType[];
     ref?: (ref: HTMLElement | Component) => void;
+    dangerouslySetInnerHTML?: { __html: string };
     [key: string]: any;
 }
 

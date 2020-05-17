@@ -98,12 +98,15 @@ export function diffProps(
 
     // 更新属性
     for (const propName of Object.keys(mixProps)) {
-        if (propName === 'children' || propName === 'ref') {
+        if (
+            propName === 'children' ||
+            propName === 'ref' ||
+            propName === 'dangerouslySetInnerHTML'
+        ) {
             continue;
         }
 
         const isEvent = propName[0] === 'o' && propName[1] === 'n';
-
         const prop = mixProps[propName];
         // 需要移除的属性
         if (!(propName in nextProps)) {

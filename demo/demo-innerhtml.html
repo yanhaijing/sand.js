@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Document</title>
+        <style>
+            .div11 {
+                background: red;
+            }
+            .div12 {
+                background: green;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>demo</h1>
+        <div id="container"></div>
+        <script src="../node_modules/es5-shim/es5-shim.js"></script>
+        <script src="../node_modules/es5-shim/es5-sham.js"></script>
+        <script src="../dist/index.aio.js"></script>
+        <script>
+            const { Component, render, createElement } = sandjs;
+
+            class MyC2 extends Component {
+                constructor(props) {
+                    super(props);
+                    this.state = {
+                        count: 0,
+                    };
+
+                    setTimeout(() => {
+                        this.setState({
+                            count: 1,
+                        });
+                        console.log('setTimeout');
+                    }, 2000);
+
+                    setTimeout(() => {
+                        this.setState({
+                            count: 2,
+                        });
+                        console.log('setTimeout');
+                    }, 4000);
+
+                    setTimeout(() => {
+                        this.setState({
+                            count: 3,
+                        });
+                        console.log('setTimeout');
+                    }, 6000);
+
+                    setTimeout(() => {
+                        this.setState({
+                            count: 4,
+                        });
+                        console.log('setTimeout');
+                    }, 8000);
+                }
+                render() {
+                    const prop = {};
+
+                    if (this.state.count % 2) {
+                        prop.dangerouslySetInnerHTML = {
+                            __html:
+                                'haha dangerouslySetInnerHTML' +
+                                this.state.count,
+                        };
+                    }
+
+                    return createElement('div', null, [
+                        ...this.props.children,
+                        createElement('div', prop, ['MyC2']),
+                    ]);
+                }
+            }
+
+            class MyC1 extends Component {
+                render() {
+                    return createElement(MyC2, null, [
+                        createElement('div', null, ['MyC1']),
+                    ]);
+                }
+            }
+
+            render(
+                createElement(MyC1, null, [123]),
+                document.getElementById('container')
+            );
+        </script>
+    </body>
+</html>

@@ -13,11 +13,11 @@
 - [X] 支持fragment
 - [X] 支持事件代理
 - [X] 支持refs
+- [X] 支持dangerouslySetInnerHTML
 - [ ] 区分macro和micro queue，保证先触发的渲染 渲染完毕，才处理后触发的渲染
 - [ ] 支持context
 - [ ] 支持ErrorBoundary
 - [ ] 支持Portal
-- [ ] 支持dangerouslySetInnerHTML
 - [ ] 兼容IE8
 - [ ] 支持SSR
 - [ ] 增加单测

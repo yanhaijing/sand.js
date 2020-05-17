@@ -99,7 +99,7 @@ export function diffProps(
     // 更新属性
     for (const propName of Object.keys(mixProps)) {
         if (propName === 'children' || propName === 'ref') {
-            break;
+            continue;
         }
 
         const isEvent = propName[0] === 'o' && propName[1] === 'n';
@@ -112,7 +112,7 @@ export function diffProps(
             } else {
                 setProp(dom, propName);
             }
-            break;
+            continue;
         }
 
         // 新增加的属性
@@ -122,7 +122,7 @@ export function diffProps(
             } else {
                 setProp(dom, propName, prop);
             }
-            break;
+            continue;
         }
 
         // 要更新的属性

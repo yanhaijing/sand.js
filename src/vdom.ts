@@ -211,7 +211,7 @@ export class DOMComponent {
         dom.innerHTML = '';
     }
     empty() {
-        this.childVdoms.forEach(child => {
+        this.childVdoms.forEach((child) => {
             child.unmountComponent();
         });
     }
@@ -551,9 +551,6 @@ export class DOMCompositeComponent {
 
         componentInstance.componentWillReceiveProps(nextProps);
 
-        componentInstance.state = nextState;
-        componentInstance.props = nextProps;
-
         // 强制更新时，绕过shouldComponentUpdate
         if (
             !isForceUpdate &&
@@ -561,6 +558,9 @@ export class DOMCompositeComponent {
         ) {
             return;
         }
+
+        componentInstance.state = nextState;
+        componentInstance.props = nextProps;
 
         componentInstance.componentWillUpdate();
         const res = componentInstance.render();

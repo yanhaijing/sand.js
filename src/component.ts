@@ -1,10 +1,10 @@
 import { SandStateType, SandPropsType, SandStateCallBack } from './type';
 import { DOMCompositeComponent } from './vdom';
 import { SandElement } from './element';
-import { noop } from './util/util';
+import { noop, shallowCompare } from './util/util';
 
 export function mergeState(stateList: SandStateType[]) {
-    return  stateList.reduce(
+    return stateList.reduce(
         (res, cur) => ({ ...res, ...cur }),
         {}
     ) as SandStateType;
@@ -58,5 +58,15 @@ export class Component {
     }
     render(): SandElement | SandElement[] | null {
         throw new Error('Sand Component need render method');
+    }
+}
+
+export class PureComponent extends Component {
+    shouldComponentUpdate(nextProps: SandPropsType, nextState: SandStateType) {
+        const { props, state } = this;
+
+        return !(
+            shallowCompare(props, nextProps) && shallowCompare(state, nextState)
+        );
     }
 }

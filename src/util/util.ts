@@ -29,3 +29,29 @@ export function dash2camel(str: string) {
         offset === 0 ? p1.toLowerCase() : p1.toUpperCase()
     );
 }
+
+// object shallow compare + object.children shallow compare
+// array shallow compare
+export function shallowCompare(a: any, b: any): boolean {
+    if (Array.isArray(a) && Array.isArray(b)) {
+        if (a.length !== b.length) {
+            return false;
+        }
+
+        return a.every((v, k) => v === b[k]);
+    }
+
+    if (typeof a === 'object' && typeof b === 'object') {
+        const keysa = Object.keys(a);
+    
+        if (keysa.length !== Object.keys(b).length) {
+            return false;
+        }
+    
+        return keysa.every((key) =>
+            key === 'children' ? shallowCompare(a[key], b[key]) : a[key] === b[key]
+        );
+    }
+
+    return a === b;
+}

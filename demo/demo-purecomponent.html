@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Document</title>
+    </head>
+    <body>
+        <h1>demo</h1>
+        <div id="container"></div>
+        <script src="../node_modules/es5-shim/es5-shim.js"></script>
+        <script src="../node_modules/es5-shim/es5-sham.js"></script>
+        <script src="../dist/index.aio.js"></script>
+        <script>
+            const { Component, PureComponent, render, createElement } = sandjs;
+
+            class MyC2 extends PureComponent {
+                constructor(props) {
+                    super(props);
+                    this.state = { number2: 2 };
+
+                    setTimeout(() => {
+                        console.log('MyC2 setState');
+                        this.setState({ number2: 2 });
+                    }, 2000);
+                }
+                render() {
+                    console.log('MyC2 render props', this.props);
+                    const { number } = this.props;
+                    const { number2 } = this.state;
+                    return createElement('div', null, [
+                        createElement('div', null, ['MyC2']),
+                        createElement('div', null, ['props.number', number]),
+                        createElement('div', null, ['state.number2', number2]),
+                    ]);
+                }
+            }
+
+            class MyC1 extends Component {
+                constructor(props) {
+                    super(props);
+                    this.state = { number: 1 };
+
+                    setTimeout(() => {
+                        console.log('MyC1 setState');
+                        this.setState({ number: 1 });
+                    }, 1000);
+                }
+                render() {
+                    console.log('MyC1 render props', this.props);
+                    const { number } = this.state;
+                    return createElement('div', null, [
+                        createElement(MyC2, { number }),
+                    ]);
+                }
+            }
+
+            render(
+                createElement(MyC1, null),
+                document.getElementById('container')
+            );
+        </script>
+    </body>
+</html>

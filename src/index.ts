@@ -33,5 +33,5 @@ export function createElement(
     return new SandElement(tag, key, props);
 }
 
-export { Component } from './component';
+export { Component, PureComponent } from './component';
 export { useState, useEffect } from './hook';

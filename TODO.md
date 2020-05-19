@@ -19,6 +19,7 @@
 - [ ] 支持PureComponent
 - [ ] 支持ErrorBoundary
 - [ ] 支持Portal
+- [ ] 支持memo
 - [ ] 兼容IE8
 - [ ] 支持SSR
 - [ ] 增加单测

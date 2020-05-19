@@ -16,6 +16,7 @@
 - [X] 支持dangerouslySetInnerHTML
 - [ ] 区分macro和micro queue，保证先触发的渲染 渲染完毕，才处理后触发的渲染
 - [ ] 支持context
+- [ ] 支持PureComponent
 - [ ] 支持ErrorBoundary
 - [ ] 支持Portal
 - [ ] 兼容IE8

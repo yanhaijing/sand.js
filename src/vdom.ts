@@ -3,13 +3,12 @@
 import { SandElement } from './element';
 import { Component, mergeState } from './component';
 import { diffProps, diffChildren } from './diff';
-import { FunctionComponentType } from './type';
+import { FunctionComponentType, DoneType } from './type';
 import {
     functionScopeStack,
     EffectFunctionType,
     EffectFunctionRetureType,
 } from './hook';
-import { noop } from './util/util';
 import { Context } from './context';
 
 export type VdomType =
@@ -27,10 +26,6 @@ export function isVdom(vdom: any): vdom is VdomType {
         vdom instanceof DOMFunctionComponent ||
         vdom instanceof DOMCompositeComponent
     );
-}
-
-interface DoneType {
-    (): void;
 }
 
 type NativeDomType = Text | HTMLElement | Comment;
@@ -76,7 +71,12 @@ export class DOMTextComponent {
     getContext(): Context {
         return this.parent.getContext();
     }
-    mountComponent(parent: VdomType | DOMRootComponent, done: DoneType = noop) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    handleError(e: Error) {
+        /** 叶子节点 do nothing */
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    mountComponent(parent: VdomType | DOMRootComponent, done: DoneType) {
         this.parent = parent;
 
         const textNode = document.createTextNode(this.text);
@@ -136,7 +136,10 @@ export class DOMFragmentComponent {
     getContext(): Context {
         return this.parent.getContext();
     }
-    mountComponent(parent: VdomType | DOMRootComponent, done: DoneType = noop) {
+    handleError(e: Error) {
+        this.parent.handleError(e);
+    }
+    mountComponent(parent: VdomType | DOMRootComponent, done: DoneType) {
         this.parent = parent;
 
         const { element } = this;
@@ -157,8 +160,6 @@ export class DOMFragmentComponent {
                 done();
             }
         ); // 旧孩子设置为空，相当于全部设置为新的
-
-        // parent.append(this);
 
         this.renderedElement = element;
     }
@@ -257,7 +258,10 @@ export class DOMComponent {
     getContext(): Context {
         return this.parent.getContext();
     }
-    mountComponent(parent: VdomType | DOMRootComponent, done: DoneType = noop) {
+    handleError(e: Error) {
+        this.parent.handleError(e);
+    }
+    mountComponent(parent: VdomType | DOMRootComponent, done: DoneType) {
         this.parent = parent;
 
         const { element } = this;
@@ -388,7 +392,10 @@ export class DOMFunctionComponent {
     getContext(): Context {
         return this.parent.getContext();
     }
-    mountComponent(parent: VdomType | DOMRootComponent, done: DoneType = noop) {
+    handleError(e: Error) {
+        this.parent.handleError(e);
+    }
+    mountComponent(parent: VdomType | DOMRootComponent, done: DoneType) {
         this.parent = parent;
 
         const { element } = this;
@@ -402,31 +409,38 @@ export class DOMFunctionComponent {
         this.lastPlaceholderDom = lastPlaceholderDom;
         parent.append(lastPlaceholderDom);
 
-        functionScopeStack.push(this);
-        this.stateCursor = 0;
-        this.effectList = [];
-        this.effectCbList = [];
-        const res = component(
-            props,
-            parentContext.getContext(component.contextType, component.contextTypes)
-        );
-        functionScopeStack.pop();
+        try {
+            functionScopeStack.push(this);
+            this.stateCursor = 0;
+            this.effectList = [];
+            this.effectCbList = [];
 
-        const nextElements = !res
-            ? ([] as SandElement[])
-            : Array.isArray(res)
-                ? res
-                : [res];
+            const res = component(
+                props,
+                parentContext.getContext(
+                    component.contextType,
+                    component.contextTypes
+                )
+            );
+            functionScopeStack.pop();
 
-        this.renderedElements = nextElements;
+            const nextElements = !res
+                ? ([] as SandElement[])
+                : Array.isArray(res)
+                    ? res
+                    : [res];
 
-        const nextVdoms = diffChildren(this, [], nextElements, [], () => {
-            this.callEffect();
-            done();
-        });
+            this.renderedElements = nextElements;
 
-        // parent.append(this);
-        this.vdoms = nextVdoms;
+            const nextVdoms = diffChildren(this, [], nextElements, [], () => {
+                this.callEffect();
+                done();
+            });
+
+            this.vdoms = nextVdoms;
+        } catch (e) {
+            this.handleError(e);
+        }
     }
     receiveComponent(done: DoneType) {
         const { element, renderedElements, vdoms, isDirty, parent } = this;
@@ -435,40 +449,49 @@ export class DOMFunctionComponent {
         if (isDirty) {
             return;
         }
-        const parentContext = parent.getContext();
-        const component = element.type as FunctionComponentType;
-        const nextProps = element.props;
 
-        functionScopeStack.push(this);
-        this.stateCursor = 0;
-        this.effectList = [];
-        this.effectCbList = [];
-        const res = component(
-            nextProps,
-            parentContext.getContext(component.contextType, component.contextTypes)
-        );
-        functionScopeStack.pop();
+        try {
+            const parentContext = parent.getContext();
+            const component = element.type as FunctionComponentType;
+            const nextProps = element.props;
 
-        const nextElements = !res
-            ? ([] as SandElement[])
-            : Array.isArray(res)
-                ? res
-                : [res];
+            functionScopeStack.push(this);
+            this.stateCursor = 0;
+            this.effectList = [];
+            this.effectCbList = [];
 
-        this.renderedElements = nextElements;
+            const res = component(
+                nextProps,
+                parentContext.getContext(
+                    component.contextType,
+                    component.contextTypes
+                )
+            );
+            functionScopeStack.pop();
 
-        const nextVdoms = diffChildren(
-            this,
-            renderedElements,
-            nextElements,
-            vdoms,
-            () => {
-                this.callEffect();
-                done();
-            }
-        );
+            const nextElements = !res
+                ? ([] as SandElement[])
+                : Array.isArray(res)
+                    ? res
+                    : [res];
 
-        this.vdoms = nextVdoms;
+            this.renderedElements = nextElements;
+
+            const nextVdoms = diffChildren(
+                this,
+                renderedElements,
+                nextElements,
+                vdoms,
+                () => {
+                    this.callEffect();
+                    done();
+                }
+            );
+
+            this.vdoms = nextVdoms;
+        } catch (e) {
+            this.handleError(e);
+        }
     }
     unmountComponent() {
         const { vdoms } = this;
@@ -523,7 +546,29 @@ export class DOMCompositeComponent {
 
         return this.parent.getContext();
     }
-    mountComponent(parent: VdomType | DOMRootComponent, done: DoneType = noop) {
+    handleError(e: Error) {
+        const { componentInstance, element } = this;
+        const TagComponent = (element.type as unknown) as typeof Component;
+        const hasGetError =
+            typeof TagComponent.getDerivedStateFromError === 'function';
+        const hasDidCatch =
+            typeof componentInstance.componentDidCatch === 'function';
+
+        if (!hasGetError && !hasDidCatch) {
+            this.parent.handleError(e);
+            return;
+        }
+
+        if (hasGetError) {
+            const state = TagComponent.getDerivedStateFromError!(e);
+            componentInstance.setState(state);
+        }
+
+        if (hasDidCatch) {
+            componentInstance.componentDidCatch!(e);
+        }
+    }
+    mountComponent(parent: VdomType | DOMRootComponent, done: DoneType) {
         this.parent = parent;
 
         const { element } = this;
@@ -538,60 +583,69 @@ export class DOMCompositeComponent {
         this.lastPlaceholderDom = lastPlaceholderDom;
         parent.append(lastPlaceholderDom);
 
-        const componentInstance = new TagComponent(
-            props,
-            parentContext.getContext(
-                TagComponent.contextType,
-                TagComponent.contextTypes
-            )
-        );
-
-        // 初始化 context
-        if (typeof TagComponent.childContextType === 'object') {
-            const curContext = new Context(
-                parentContext,
-                typeof componentInstance.getChildContext === 'function'
-                    ? componentInstance.getChildContext()
-                    : undefined,
-                TagComponent.childContextType
+        try {
+            const componentInstance = new TagComponent(
+                props,
+                parentContext.getContext(
+                    TagComponent.contextType,
+                    TagComponent.contextTypes
+                )
             );
 
-            this.context = curContext;
-        } else if (typeof TagComponent.childContextTypes === 'object') {
-            const curContext = new Context(
-                parentContext,
-                typeof componentInstance.getChildContext === 'function'
-                    ? componentInstance.getChildContext()
-                    : undefined
-            );
+            // 初始化 context
+            if (typeof TagComponent.childContextType === 'object') {
+                const curContext = new Context(
+                    parentContext,
+                    typeof componentInstance.getChildContext === 'function'
+                        ? componentInstance.getChildContext()
+                        : undefined,
+                    TagComponent.childContextType
+                );
 
-            this.context = curContext;
-        }
+                this.context = curContext;
+            } else if (typeof TagComponent.childContextTypes === 'object') {
+                const curContext = new Context(
+                    parentContext,
+                    typeof componentInstance.getChildContext === 'function'
+                        ? componentInstance.getChildContext()
+                        : undefined
+                );
 
-        componentInstance._sandVdomInstance = this;
+                this.context = curContext;
+            }
 
-        this.componentInstance = componentInstance;
-        const res = componentInstance.render();
+            componentInstance._sandVdomInstance = this;
 
-        const nextElements = !res
-            ? ([] as SandElement[])
-            : Array.isArray(res)
-                ? res
-                : [res];
+            this.componentInstance = componentInstance;
 
-        this.renderedElements = nextElements;
+            const res = componentInstance.render();
 
-        componentInstance.componentWillMount();
+            const nextElements = !res
+                ? ([] as SandElement[])
+                : Array.isArray(res)
+                    ? res
+                    : [res];
 
-        const nextVdoms = diffChildren(this, [], nextElements, [], () => {
-            done();
-            componentInstance.componentDidMount();
-        });
+            this.renderedElements = nextElements;
 
-        this.vdoms = nextVdoms;
+            componentInstance.componentWillMount();
 
-        if (typeof props.ref === 'function') {
-            props.ref(componentInstance);
+            const nextVdoms = diffChildren(this, [], nextElements, [], () => {
+                done();
+                try {
+                    componentInstance.componentDidMount();
+                } catch (e) {
+                    parent.handleError(e);
+                }
+            });
+
+            this.vdoms = nextVdoms;
+
+            if (typeof props.ref === 'function') {
+                props.ref(componentInstance);
+            }
+        } catch (e) {
+            parent.handleError(e);
         }
     }
     receiveComponent(done: DoneType) {
@@ -620,67 +674,71 @@ export class DOMCompositeComponent {
             TagComponent.contextTypes
         );
 
-        componentInstance.componentWillReceiveProps(nextProps, nextContext);
+        try {
+            componentInstance.componentWillReceiveProps(nextProps, nextContext);
 
-        // 强制更新时，绕过shouldComponentUpdate
-        if (
-            !isForceUpdate &&
-            !componentInstance.shouldComponentUpdate(
+            // 强制更新时，绕过shouldComponentUpdate
+            if (
+                !isForceUpdate &&
+                !componentInstance.shouldComponentUpdate(
+                    nextProps,
+                    nextState,
+                    nextContext
+                )
+            ) {
+                return;
+            }
+
+            componentInstance.componentWillUpdate(
                 nextProps,
                 nextState,
                 nextContext
-            )
-        ) {
-            return;
-        }
-
-        componentInstance.componentWillUpdate(
-            nextProps,
-            nextState,
-            nextContext
-        );
-
-        componentInstance.state = nextState;
-        componentInstance.props = nextProps;
-        componentInstance.context = nextContext;
-        // 更新 context
-        if (this.context) {
-            this.context.setData(
-                typeof componentInstance.getChildContext === 'function'
-                    ? componentInstance.getChildContext()
-                    : undefined
             );
-        }
-        const res = componentInstance.render();
 
-        const nextElements = !res
-            ? ([] as SandElement[])
-            : Array.isArray(res)
-                ? res
-                : [res];
-
-        this.renderedElements = nextElements;
-
-        const nextVdoms = diffChildren(
-            this,
-            renderedElements,
-            nextElements,
-            vdoms,
-            () => {
-                componentInstance.componentDidUpdate();
-                done();
+            componentInstance.state = nextState;
+            componentInstance.props = nextProps;
+            componentInstance.context = nextContext;
+            // 更新 context
+            if (this.context) {
+                this.context.setData(
+                    typeof componentInstance.getChildContext === 'function'
+                        ? componentInstance.getChildContext()
+                        : undefined
+                );
             }
-        );
+            const res = componentInstance.render();
 
-        this.vdoms = nextVdoms;
+            const nextElements = !res
+                ? ([] as SandElement[])
+                : Array.isArray(res)
+                    ? res
+                    : [res];
 
-        // 处理组件state
-        setStateCallbacks.forEach((cb) => {
-            cb(nextState);
-        });
-        componentInstance.cacheStates = [];
-        componentInstance.setStateCallbacks = [];
-        this.isForceUpdate = false;
+            this.renderedElements = nextElements;
+
+            const nextVdoms = diffChildren(
+                this,
+                renderedElements,
+                nextElements,
+                vdoms,
+                () => {
+                    componentInstance.componentDidUpdate();
+                    done();
+                }
+            );
+
+            this.vdoms = nextVdoms;
+
+            // 处理组件state
+            setStateCallbacks.forEach((cb) => {
+                cb(nextState);
+            });
+            componentInstance.cacheStates = [];
+            componentInstance.setStateCallbacks = [];
+            this.isForceUpdate = false;
+        } catch (e) {
+            parent.handleError(e);
+        }
     }
     unmountComponent() {
         const { vdoms, componentInstance } = this;
@@ -695,6 +753,9 @@ export class DOMRootComponent {
     constructor(dom: HTMLElement) {
         this.dom = dom;
         this.context = new Context(null);
+    }
+    handleError(e: Error) {
+        throw e;
     }
     append(vdom: VdomType | NativeDomType) {
         getNativeDoms(vdom).forEach((dom) => {

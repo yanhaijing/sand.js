@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Document</title>
+        <style>
+            .div11 {
+                background: red;
+            }
+            .div12 {
+                background: green;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>demo</h1>
+        <div id="container"></div>
+        <script src="../node_modules/es5-shim/es5-shim.js"></script>
+        <script src="../node_modules/es5-shim/es5-sham.js"></script>
+        <script src="../dist/index.aio.js"></script>
+        <script>
+            const { Component, render, createElement } = sandjs;
+
+            class MyC2 extends Component {
+                render() {
+                    if (this.props.count % 2) {
+                        throw new Error(111);
+                    }
+                    return createElement('div', null, [
+                        ...this.props.children,
+                        createElement('div', null, ['MyC2']),
+                    ]);
+                }
+            }
+
+            class ErrorBoundary extends Component {
+                constructor(props) {
+                    super(props);
+                    this.state = { hasError: false };
+                }
+
+                static getDerivedStateFromError(error) {
+                    return { hasError: true };
+                }
+
+                componentDidCatch(error) {
+                    console.log(error);
+                }
+
+                render() {
+                    if (this.state.hasError) {
+                        // 你可以自定义降级后的 UI 并渲染
+                        return createElement(
+                            'div',
+                            null,
+                            'Something went wrong.'
+                        );
+                    }
+
+                    return this.props.children;
+                }
+            }
+
+            class MyC1 extends Component {
+                constructor() {
+                    super();
+                    this.state = { count: 0 };
+                    this.onClick = this.onClick.bind(this);
+                }
+                onClick() {
+                    console.log('onClick');
+                    this.setState({
+                        count: this.state.count + 1,
+                    });
+                }
+                render() {
+                    const { count } = this.state;
+                    console.log('render', count)
+                    return createElement('div', null, [
+                        createElement(ErrorBoundary, null, [
+                            createElement(MyC2, { count }),
+                        ]),
+                        createElement('button', { onClick: this.onClick }, [
+                            '点击报错',
+                        ]),
+                    ]);
+                }
+            }
+
+            render(
+                createElement(MyC1, null, []),
+                document.getElementById('container')
+            );
+        </script>
+    </body>
+</html>

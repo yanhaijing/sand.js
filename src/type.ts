@@ -5,14 +5,17 @@ import { CustomContext } from './context';
 export interface ContextType {
     [key: string]: any;
 }
-export type ChildContextType =  ContextType;
+export type ChildContextType = ContextType;
 export type SandKeyType = string | number;
 export interface SandStateType {
     [key: string]: any;
 }
 
 export interface FunctionComponentType {
-    (props: SandPropsType, context: ContextType): SandElement | SandElement[] | null;
+    (props: SandPropsType, context: ContextType):
+    | SandElement
+    | SandElement[]
+    | null;
     contextTypes?: ContextType;
     contextType?: CustomContext;
 }
@@ -29,4 +32,8 @@ export interface SandPropsType {
 
 export interface SandStateCallBack {
     (nextState: SandStateType): void;
+}
+
+export interface DoneType {
+    (): void;
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
     SandStateType,
     SandPropsType,
@@ -17,12 +18,12 @@ export function mergeState(stateList: SandStateType[]) {
     ) as SandStateType;
 }
 
-
 export class Component {
     static contextTypes?: ContextType;
     static childContextTypes?: ChildContextType;
     static contextType?: CustomContext;
     static childContextType?: CustomContext;
+    static getDerivedStateFromError?(error: Error): SandStateType;
     props: SandPropsType;
     state!: SandStateType;
     context?: ContextType;
@@ -36,7 +37,7 @@ export class Component {
         this.cacheStates = [];
         this.setStateCallbacks = [];
     }
-    getChildContext?(): ChildContextType
+    getChildContext?(): ChildContextType;
     setState(nextState: SandStateType, cb?: SandStateCallBack) {
         const { cacheStates } = this;
 
@@ -58,14 +59,22 @@ export class Component {
     componentWillMount() {}
     componentDidMount() {}
     componentWillUnmount() {}
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    shouldComponentUpdate(nextProps: SandPropsType, nextState: SandStateType, nextContext: ContextType) {
+    shouldComponentUpdate(
+        nextProps: SandPropsType,
+        nextState: SandStateType,
+        nextContext: ContextType
+    ) {
         return true;
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    componentWillReceiveProps(nextProps: SandPropsType, nextContext: ContextType) {}
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    componentWillUpdate(nextProps: SandPropsType, nextState: SandStateType, nextContext: ContextType) {}
+    componentWillReceiveProps(
+        nextProps: SandPropsType,
+        nextContext: ContextType
+    ) {}
+    componentWillUpdate(
+        nextProps: SandPropsType,
+        nextState: SandStateType,
+        nextContext: ContextType
+    ) {}
     componentDidUpdate() {}
     forceUpdate() {
         this._sandVdomInstance.isForceUpdate = true;
@@ -74,6 +83,7 @@ export class Component {
     render(): SandElement | SandElement[] | null {
         throw new Error('Sand Component need render method');
     }
+    componentDidCatch?(error: Error): void;
 }
 
 export class PureComponent extends Component {

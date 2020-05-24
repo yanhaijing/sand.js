@@ -1,11 +1,21 @@
-import { omit } from './util/util';
+import { omit, noop } from './util/util';
 import { instantiateDOMComponent, DOMRootComponent } from './vdom';
 import { SandElement } from './element';
-import { SandTagType, SandChildType, SandPropsType, SandKeyType } from './type';
+import {
+    SandTagType,
+    SandChildType,
+    SandPropsType,
+    SandKeyType,
+    DoneType,
+} from './type';
 
-export function render(element: SandElement, container: HTMLElement) {
+export function render(
+    element: SandElement,
+    container: HTMLElement,
+    done: DoneType = noop
+) {
     const vdom = instantiateDOMComponent(element);
-    vdom.mountComponent(new DOMRootComponent(container));
+    vdom.mountComponent(new DOMRootComponent(container), done);
 }
 
 interface ConfigType {

@@ -5,7 +5,7 @@ import {
     DOMComponent,
 } from './vdom';
 import { dash2camel, propName2eventName } from './util/util';
-import { SandPropsType, SandChildType } from './type';
+import { SandPropsType, SandChildType, DoneType } from './type';
 import { SandElement } from './element';
 import { Transaction, globalTaskQueue } from './queue';
 
@@ -154,7 +154,7 @@ export function diffChildren(
     curChildren: SandChildType[],
     nextChildren: SandChildType[],
     childVdoms: VdomType[],
-    done: () => void
+    done: DoneType,
 ) {
     const curChildrenMap = curChildren.reduce((map, child, index) => {
         map[getChildKey(child, index)] = {

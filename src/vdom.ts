@@ -10,6 +10,7 @@ import {
     EffectFunctionRetureType,
 } from './hook';
 import { noop } from './util/util';
+import { Context } from './context';
 
 export type VdomType =
     | DOMTextComponent
@@ -68,6 +69,9 @@ export class DOMTextComponent {
     ) {
         /** 叶子节点 do nothing */
     }
+    getContext(): Context {
+        return this.parent.getContext();
+    }
     mountComponent(parent: VdomType | DOMRootComponent, done: DoneType = noop) {
         this.parent = parent;
 
@@ -124,6 +128,9 @@ export class DOMFragmentComponent {
         existingItem: NativeDomType
     ) {
         this.parent.insertBefore(newItem, existingItem);
+    }
+    getContext(): Context {
+        return this.parent.getContext();
     }
     mountComponent(parent: VdomType | DOMRootComponent, done: DoneType = noop) {
         this.parent = parent;
@@ -242,6 +249,9 @@ export class DOMComponent {
     eventProxy(e: Event) {
         const fn = this.listenterMap[e.type];
         fn.call(e.target, e);
+    }
+    getContext(): Context {
+        return this.parent.getContext();
     }
     mountComponent(parent: VdomType | DOMRootComponent, done: DoneType = noop) {
         this.parent = parent;
@@ -371,12 +381,16 @@ export class DOMFunctionComponent {
             }
         });
     }
+    getContext(): Context {
+        return this.parent.getContext();
+    }
     mountComponent(parent: VdomType | DOMRootComponent, done: DoneType = noop) {
         this.parent = parent;
 
         const { element } = this;
         const component = element.type as FunctionComponentType;
         const { props } = element;
+        const parentContext = parent.getContext();
 
         const lastPlaceholderDom = document.createComment(
             'DOMFunctionComponent lastPlaceholderDom'
@@ -388,7 +402,10 @@ export class DOMFunctionComponent {
         this.stateCursor = 0;
         this.effectList = [];
         this.effectCbList = [];
-        const res = component(props);
+        const res = component(
+            props,
+            parentContext.getContextByMap(component.contextTypes)
+        );
         functionScopeStack.pop();
 
         const nextElements = !res
@@ -408,12 +425,13 @@ export class DOMFunctionComponent {
         this.vdoms = nextVdoms;
     }
     receiveComponent(done: DoneType) {
-        const { element, renderedElements, vdoms, isDirty } = this;
+        const { element, renderedElements, vdoms, isDirty, parent } = this;
 
         // 如果当前组件在待更新队列中，不执行
         if (isDirty) {
             return;
         }
+        const parentContext = parent.getContext();
         const component = element.type as FunctionComponentType;
         const nextProps = element.props;
 
@@ -421,7 +439,10 @@ export class DOMFunctionComponent {
         this.stateCursor = 0;
         this.effectList = [];
         this.effectCbList = [];
-        const res = component(nextProps);
+        const res = component(
+            nextProps,
+            parentContext.getContextByMap(component.contextTypes)
+        );
         functionScopeStack.pop();
 
         const nextElements = !res
@@ -464,6 +485,7 @@ export class DOMCompositeComponent {
     nextVdomSibling?: VdomType;
     isDirty = false;
     isForceUpdate = false;
+    context?: Context;
 
     constructor(element: SandElement) {
         this.element = element;
@@ -489,6 +511,14 @@ export class DOMCompositeComponent {
     ) {
         this.parent.insertBefore(newItem, existingItem);
     }
+    getContext(): Context {
+        const { context } = this;
+        if (context) {
+            return context;
+        }
+
+        return this.parent.getContext();
+    }
     mountComponent(parent: VdomType | DOMRootComponent, done: DoneType = noop) {
         this.parent = parent;
 
@@ -496,6 +526,7 @@ export class DOMCompositeComponent {
 
         const TagComponent = (element.type as unknown) as typeof Component;
         const { props } = element;
+        const parentContext = parent.getContext();
 
         const lastPlaceholderDom = document.createComment(
             'DOMCompositeComponent lastPlaceholderDom'
@@ -503,7 +534,23 @@ export class DOMCompositeComponent {
         this.lastPlaceholderDom = lastPlaceholderDom;
         parent.append(lastPlaceholderDom);
 
-        const componentInstance = new TagComponent(props);
+        const componentInstance = new TagComponent(
+            props,
+            parentContext.getContextByMap(TagComponent.contextTypes)
+        );
+
+        // 初始化 context
+        if (typeof TagComponent.childContextTypes === 'object') {
+            const curContext = new Context(
+                parentContext,
+                typeof componentInstance.getChildContext === 'function'
+                    ? componentInstance.getChildContext()
+                    : undefined
+            );
+
+            this.context = curContext;
+        }
+
         componentInstance._sandVdomInstance = this;
 
         this.componentInstance = componentInstance;
@@ -538,6 +585,7 @@ export class DOMCompositeComponent {
             vdoms,
             isDirty,
             isForceUpdate,
+            parent,
         } = this;
 
         // 如果当前组件在待更新队列中，不执行
@@ -545,24 +593,46 @@ export class DOMCompositeComponent {
             return;
         }
 
+        const parentContext = parent.getContext();
+        const TagComponent = (element.type as unknown) as typeof Component;
         const { state, cacheStates, setStateCallbacks } = componentInstance;
         const nextState = mergeState([state, ...cacheStates]);
         const nextProps = element.props;
+        const nextContext = parentContext.getContextByMap(
+            TagComponent.contextTypes
+        );
 
-        componentInstance.componentWillReceiveProps(nextProps);
+        componentInstance.componentWillReceiveProps(nextProps, nextContext);
 
         // 强制更新时，绕过shouldComponentUpdate
         if (
             !isForceUpdate &&
-            !componentInstance.shouldComponentUpdate(nextProps, nextState)
+            !componentInstance.shouldComponentUpdate(
+                nextProps,
+                nextState,
+                nextContext
+            )
         ) {
             return;
         }
 
+        componentInstance.componentWillUpdate(
+            nextProps,
+            nextState,
+            nextContext
+        );
+
         componentInstance.state = nextState;
         componentInstance.props = nextProps;
-
-        componentInstance.componentWillUpdate();
+        componentInstance.context = nextContext;
+        // 更新 context
+        if (this.context) {
+            this.context.setData(
+                typeof componentInstance.getChildContext === 'function'
+                    ? componentInstance.getChildContext()
+                    : undefined
+            );
+        }
         const res = componentInstance.render();
 
         const nextElements = !res
@@ -603,8 +673,10 @@ export class DOMCompositeComponent {
 
 export class DOMRootComponent {
     dom: HTMLElement;
+    context: Context;
     constructor(dom: HTMLElement) {
         this.dom = dom;
+        this.context = new Context(null);
     }
     append(vdom: VdomType | NativeDomType) {
         getNativeDoms(vdom).forEach((dom) => {
@@ -623,6 +695,9 @@ export class DOMRootComponent {
         getNativeDoms(newItem).forEach((dom) => {
             this.dom.insertBefore(dom, existingItem);
         });
+    }
+    getContext() {
+        return this.context;
     }
 }
 export function instantiateDOMComponent(

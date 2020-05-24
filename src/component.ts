@@ -1,4 +1,10 @@
-import { SandStateType, SandPropsType, SandStateCallBack } from './type';
+import {
+    SandStateType,
+    SandPropsType,
+    SandStateCallBack,
+    ContextType,
+    ChildContextType,
+} from './type';
 import { DOMCompositeComponent } from './vdom';
 import { SandElement } from './element';
 import { noop, shallowCompare } from './util/util';
@@ -10,19 +16,24 @@ export function mergeState(stateList: SandStateType[]) {
     ) as SandStateType;
 }
 
+
 export class Component {
+    static contextTypes?: ContextType;
+    static childContextTypes?: ChildContextType;
     props: SandPropsType;
     state!: SandStateType;
+    context?: ContextType;
     cacheStates: SandStateType[];
     setStateCallbacks: SandStateCallBack[];
     _sandVdomInstance!: DOMCompositeComponent;
 
-    constructor(props?: SandPropsType) {
+    constructor(props?: SandPropsType, context?: ContextType) {
         this.props = props || { children: [] };
+        this.context = context;
         this.cacheStates = [];
         this.setStateCallbacks = [];
     }
-
+    getChildContext?(): ChildContextType
     setState(nextState: SandStateType, cb?: SandStateCallBack) {
         const { cacheStates } = this;
 
@@ -45,12 +56,13 @@ export class Component {
     componentDidMount() {}
     componentWillUnmount() {}
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    shouldComponentUpdate(nextProps: SandPropsType, nextState: SandStateType) {
+    shouldComponentUpdate(nextProps: SandPropsType, nextState: SandStateType, nextContext: ContextType) {
         return true;
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    componentWillReceiveProps(nextProps: SandPropsType) {}
-    componentWillUpdate() {}
+    componentWillReceiveProps(nextProps: SandPropsType, nextContext: ContextType) {}
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    componentWillUpdate(nextProps: SandPropsType, nextState: SandStateType, nextContext: ContextType) {}
     componentDidUpdate() {}
     forceUpdate() {
         this._sandVdomInstance.isForceUpdate = true;

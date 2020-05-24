@@ -15,8 +15,8 @@
 - [X] 支持refs
 - [X] 支持dangerouslySetInnerHTML
 - [X] 支持PureComponent
+- [X] 支持context
 - [ ] 区分macro和micro queue，保证先触发的渲染 渲染完毕，才处理后触发的渲染
-- [ ] 支持context
 - [ ] 支持ErrorBoundary
 - [ ] 支持Portal
 - [ ] 支持PropTypes

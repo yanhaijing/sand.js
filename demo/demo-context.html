@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Document</title>
+        <style>
+            .div11 {
+                background: red;
+            }
+            .div12 {
+                background: green;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>demo</h1>
+        <div id="container"></div>
+        <script src="../node_modules/es5-shim/es5-shim.js"></script>
+        <script src="../node_modules/es5-shim/es5-sham.js"></script>
+        <script src="../dist/index.aio.js"></script>
+        <script>
+            const { Component, render, createElement } = sandjs;
+            function MyC4(props, context) {
+                console.log('MyC4', props, context);
+                return createElement('div', null, ['MyC4:', context.count4]);
+            }
+            MyC4.contextTypes = {
+                count4: 'number',
+            };
+
+            class MyC3 extends Component {
+                render() {
+                    console.log('MyC3', this.context);
+                    return createElement('div', null, [
+                        createElement('div', null, [
+                            'MyC3:',
+                            this.context.count3,
+                        ]),
+                        createElement(MyC4),
+                    ]);
+                }
+            }
+
+            MyC3.contextTypes = {
+                count3: 'number',
+            };
+
+            class MyC2 extends Component {
+                getChildContext() {
+                    console.log('MyC2 getChildContext', {
+                        count4: this.props.count + 3,
+                    });
+                    return {
+                        count4: this.props.count + 3,
+                    };
+                }
+                render() {
+                    return createElement('div', null, [
+                        createElement('div', null, ['MyC2']),
+                        createElement(MyC3),
+                    ]);
+                }
+            }
+            MyC2.childContextTypes = {
+                count4: 'number',
+            };
+
+            class MyC1 extends Component {
+                constructor() {
+                    super();
+                    this.state = {
+                        count: 1,
+                    };
+
+                    setTimeout(() => {
+                        console.log('--------------');
+                        this.setState({
+                            count: 2,
+                        });
+                    }, 2000);
+                }
+                getChildContext() {
+                    console.log('MyC1 getChildContext', {
+                        count3: this.state.count + 2,
+                    });
+                    return {
+                        count3: this.state.count + 2,
+                    };
+                }
+                render() {
+                    return createElement('div', null, [
+                        createElement('div', null, ['MyC1']),
+                        createElement(MyC2, { count: this.state.count }),
+                    ]);
+                }
+            }
+            MyC1.childContextTypes = {
+                count3: 'number',
+            };
+
+            render(
+                createElement(MyC1, null, []),
+                document.getElementById('container')
+            );
+        </script>
+    </body>
+</html>

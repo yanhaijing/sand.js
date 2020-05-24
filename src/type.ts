@@ -1,5 +1,6 @@
 import { Component } from './component';
 import { SandElement } from './element';
+import { CustomContext } from './context';
 
 export interface ContextType {
     [key: string]: any;
@@ -13,6 +14,7 @@ export interface SandStateType {
 export interface FunctionComponentType {
     (props: SandPropsType, context: ContextType): SandElement | SandElement[] | null;
     contextTypes?: ContextType;
+    contextType?: CustomContext;
 }
 
 export type SandTagType = string | Component | FunctionComponentType;

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Document</title>
+        <style>
+            .div11 {
+                background: red;
+            }
+            .div12 {
+                background: green;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>demo</h1>
+        <div id="container"></div>
+        <script src="../node_modules/es5-shim/es5-shim.js"></script>
+        <script src="../node_modules/es5-shim/es5-sham.js"></script>
+        <script src="../dist/index.aio.js"></script>
+        <script>
+            const { Component, render, createElement, createContext } = sandjs;
+
+            const MyC1Context = createContext(1);
+            const MyC2Context = createContext(2);
+
+            function MyC4(props, context) {
+                console.log('MyC4', props, context);
+                return createElement(
+                    'div',
+                    null,
+                    createElement(MyC2Context.Consumer, null, (value) => {
+                        console.log('MyC4 value', value);
+                        return ['MyC4:', value];
+                    })
+                );
+            }
+
+            class MyC3 extends Component {
+                render() {
+                    console.log('MyC3', this.context);
+                    return createElement('div', null, [
+                        createElement('div', null, ['MyC3:', this.context]),
+                        createElement(MyC4),
+                    ]);
+                }
+            }
+
+            MyC3.contextType = MyC1Context;
+
+            class MyC2 extends Component {
+                render() {
+                    return createElement('div', null, [
+                        createElement('div', null, ['MyC2']),
+
+                        createElement(
+                            MyC2Context.Provider,
+                            { value: this.props.count + 3 },
+                            createElement(MyC3)
+                        ),
+                    ]);
+                }
+            }
+
+            class MyC1 extends Component {
+                constructor() {
+                    super();
+                    this.state = {
+                        count: 1,
+                    };
+
+                    setTimeout(() => {
+                        console.log('--------------');
+                        this.setState({
+                            count: 2,
+                        });
+                    }, 2000);
+                }
+                render() {
+                    return createElement('div', null, [
+                        createElement('div', null, ['MyC1']),
+                        createElement(
+                            MyC1Context.Provider,
+                            { value: this.state.count + 2 },
+                            createElement(MyC2, { count: this.state.count })
+                        ),
+                    ]);
+                }
+            }
+
+            render(
+                createElement(MyC1, null, []),
+                document.getElementById('container')
+            );
+        </script>
+    </body>
+</html>

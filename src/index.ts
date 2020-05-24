@@ -35,3 +35,4 @@ export function createElement(
 
 export { Component, PureComponent } from './component';
 export { useState, useEffect } from './hook';
+export { createContext } from './context';

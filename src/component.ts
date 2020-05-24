@@ -8,6 +8,7 @@ import {
 import { DOMCompositeComponent } from './vdom';
 import { SandElement } from './element';
 import { noop, shallowCompare } from './util/util';
+import { CustomContext } from './context';
 
 export function mergeState(stateList: SandStateType[]) {
     return stateList.reduce(
@@ -20,6 +21,8 @@ export function mergeState(stateList: SandStateType[]) {
 export class Component {
     static contextTypes?: ContextType;
     static childContextTypes?: ChildContextType;
+    static contextType?: CustomContext;
+    static childContextType?: CustomContext;
     props: SandPropsType;
     state!: SandStateType;
     context?: ContextType;

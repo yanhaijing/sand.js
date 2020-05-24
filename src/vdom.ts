@@ -19,6 +19,16 @@ export type VdomType =
     | DOMFunctionComponent
     | DOMCompositeComponent;
 
+export function isVdom(vdom: any): vdom is VdomType {
+    return (
+        vdom instanceof DOMTextComponent ||
+        vdom instanceof DOMFragmentComponent ||
+        vdom instanceof DOMComponent ||
+        vdom instanceof DOMFunctionComponent ||
+        vdom instanceof DOMCompositeComponent
+    );
+}
+
 interface DoneType {
     (): void;
 }
@@ -26,13 +36,7 @@ interface DoneType {
 type NativeDomType = Text | HTMLElement | Comment;
 
 function getNativeDoms(vdom: VdomType | NativeDomType) {
-    if (
-        vdom instanceof DOMTextComponent ||
-        vdom instanceof DOMFragmentComponent ||
-        vdom instanceof DOMComponent ||
-        vdom instanceof DOMFunctionComponent ||
-        vdom instanceof DOMCompositeComponent
-    ) {
+    if (isVdom(vdom)) {
         return vdom.getNativeDoms();
     }
 
@@ -404,7 +408,7 @@ export class DOMFunctionComponent {
         this.effectCbList = [];
         const res = component(
             props,
-            parentContext.getContextByMap(component.contextTypes)
+            parentContext.getContext(component.contextType, component.contextTypes)
         );
         functionScopeStack.pop();
 
@@ -441,7 +445,7 @@ export class DOMFunctionComponent {
         this.effectCbList = [];
         const res = component(
             nextProps,
-            parentContext.getContextByMap(component.contextTypes)
+            parentContext.getContext(component.contextType, component.contextTypes)
         );
         functionScopeStack.pop();
 
@@ -536,11 +540,24 @@ export class DOMCompositeComponent {
 
         const componentInstance = new TagComponent(
             props,
-            parentContext.getContextByMap(TagComponent.contextTypes)
+            parentContext.getContext(
+                TagComponent.contextType,
+                TagComponent.contextTypes
+            )
         );
 
         // 初始化 context
-        if (typeof TagComponent.childContextTypes === 'object') {
+        if (typeof TagComponent.childContextType === 'object') {
+            const curContext = new Context(
+                parentContext,
+                typeof componentInstance.getChildContext === 'function'
+                    ? componentInstance.getChildContext()
+                    : undefined,
+                TagComponent.childContextType
+            );
+
+            this.context = curContext;
+        } else if (typeof TagComponent.childContextTypes === 'object') {
             const curContext = new Context(
                 parentContext,
                 typeof componentInstance.getChildContext === 'function'
@@ -598,7 +615,8 @@ export class DOMCompositeComponent {
         const { state, cacheStates, setStateCallbacks } = componentInstance;
         const nextState = mergeState([state, ...cacheStates]);
         const nextProps = element.props;
-        const nextContext = parentContext.getContextByMap(
+        const nextContext = parentContext.getContext(
+            TagComponent.contextType,
             TagComponent.contextTypes
         );
 

@@ -36,6 +36,7 @@ export class Component {
         this.context = context;
         this.cacheStates = [];
         this.setStateCallbacks = [];
+        this.state = {};
     }
     getChildContext?(): ChildContextType;
     setState(nextState: SandStateType, cb?: SandStateCallBack) {
@@ -87,11 +88,17 @@ export class Component {
 }
 
 export class PureComponent extends Component {
-    shouldComponentUpdate(nextProps: SandPropsType, nextState: SandStateType) {
-        const { props, state } = this;
+    shouldComponentUpdate(
+        nextProps: SandPropsType,
+        nextState: SandStateType,
+        nextContext: ContextType
+    ) {
+        const { props, state, context } = this;
 
         return !(
-            shallowCompare(props, nextProps) && shallowCompare(state, nextState)
+            shallowCompare(props, nextProps) &&
+            shallowCompare(state, nextState) &&
+            shallowCompare(context, nextContext)
         );
     }
 }

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Document</title>
+        <style>
+            .div11 {
+                background: red;
+            }
+            .div12 {
+                background: green;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>demo</h1>
+        <div id="container"></div>
+        <script src="../node_modules/es5-shim/es5-shim.js"></script>
+        <script src="../node_modules/es5-shim/es5-sham.js"></script>
+        <script src="../dist/index.aio.js"></script>
+        <script>
+            const { Component, render, createElement, memo } = sandjs;
+        </script>
+        <script>
+            function Component1(props) {
+                console.log('Component1 exec', props);
+                return createElement('div', null, [props.number]);
+            }
+            function Component2(props) {
+                console.log('Component2 exec', props);
+                return createElement('div', null, [props.number]);
+            }
+            const MemoComponent2 = memo(Component2);
+            function Component3(props) {
+                console.log('Component3 exec', props);
+                return createElement('div', null, [props.number]);
+            }
+            const MemoComponent3 = memo(Component3, (props, nextProps) => {
+                console.log('MemoComponent2 memo', props, nextProps);
+                return true;
+            });
+            class MyC extends Component {
+                constructor(props) {
+                    super(props);
+                    this.state = { number: 1 };
+
+                    this.onAdd = this.onAdd.bind(this);
+                    this.onDec = this.onDec.bind(this);
+                }
+                onAdd() {
+                    this.setState({
+                        number: this.state.number + 1,
+                    });
+                }
+                onDec() {
+                    this.setState({
+                        number: this.state.number - 1,
+                    });
+                }
+                render() {
+                    const { number } = this.state;
+                    console.log('MyC render', number);
+                    return createElement(
+                        'div',
+                        { id: 'div1', class: 'div1' + number },
+                        [
+                            createElement('span', null, ['hello']),
+                            createElement('span', null, ['world']),
+                            createElement(Component1, { number }),
+                            createElement(MemoComponent2, { number: 666 }),
+                            createElement(MemoComponent3, { number }),
+                            createElement('div', null, [
+                                createElement(
+                                    'button',
+                                    { onClick: this.onAdd },
+                                    ['增加']
+                                ),
+                                createElement(
+                                    'button',
+                                    { onClick: this.onDec },
+                                    ['减少']
+                                ),
+                            ]),
+                        ]
+                    );
+                }
+            }
+
+            render(
+                createElement(MyC, null, []),
+                document.getElementById('container')
+            );
+        </script>
+    </body>
+</html>

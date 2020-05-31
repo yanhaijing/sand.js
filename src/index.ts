@@ -46,7 +46,9 @@ export function createElement(
 
 export { Component, PureComponent } from './component';
 export { Profiler } from './profiler';
+export { Suspense } from './suspense';
 export { useState, useEffect } from './hook';
 export { createContext } from './context';
 export { createPortal } from './portal';
 export { memo } from './memo';
+export { lazy } from './lazy';

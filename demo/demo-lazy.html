@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Document</title>
+        <style>
+            .div11 {
+                background: red;
+            }
+            .div12 {
+                background: green;
+            }
+            .div13 {
+                background: blue;
+            }
+            .div14 {
+                background: maroon;
+            }
+            .div15 {
+                background: yellow;
+            }
+            .div16 {
+                background: orange;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>demo</h1>
+        <div id="container"></div>
+        <script src="../node_modules/es5-shim/es5-shim.js"></script>
+        <script src="../node_modules/es5-shim/es5-sham.js"></script>
+        <script src="../dist/index.aio.js"></script>
+        <script>
+            const { Component, render, createElement, lazy, Suspense } = sandjs;
+
+            function delay(time, fn) {
+                return new Promise((resolve, reject) => {
+                    setTimeout(resolve, time);
+                }).then(() => fn());
+            }
+            const OtherComponent = lazy(() =>
+                delay(2000, () => import('./js/lazy.js'))
+            );
+
+            class MyC extends Component {
+                constructor(props) {
+                    super(props);
+                    this.state = { number: 1 };
+
+                    this.onAdd = this.onAdd.bind(this);
+                    this.onDec = this.onDec.bind(this);
+                }
+                onAdd() {
+                    console.log('onAdd');
+                    this.setState({
+                        number: this.state.number + 1,
+                    });
+                }
+                onDec() {
+                    this.setState({
+                        number: this.state.number - 1,
+                    });
+                }
+                render() {
+                    const { number } = this.state;
+                    return createElement(
+                        'div',
+                        { id: 'div1', class: 'div1' + number },
+                        [
+                            createElement('span', null, ['hello']),
+                            createElement('span', null, ['world']),
+                            createElement('span', null, [number]),
+                            createElement(
+                                Suspense,
+                                {
+                                    fallback: createElement('span', null, [
+                                        'loading...',
+                                    ]),
+                                },
+                                [
+                                    createElement('div', null, [
+                                        createElement(OtherComponent),
+                                    ]),
+                                ]
+                            ),
+                            createElement('div', null, [
+                                createElement(
+                                    'button',
+                                    { onClick: this.onAdd },
+                                    ['增加']
+                                ),
+                                createElement(
+                                    'button',
+                                    { onClick: this.onDec },
+                                    ['减少']
+                                ),
+                            ]),
+                        ]
+                    );
+                }
+            }
+
+            render(
+                createElement(MyC, null, []),
+                document.getElementById('container')
+            );
+        </script>
+    </body>
+</html>

@@ -10,7 +10,7 @@
 - [X] 当前组件在队列中，setState不再触发重新检测
 - [X] 当前组件在队列中，hook函数不再触发重新检测
 - [X] 支持hook函数
-- [X] 支持fragment
+- [X] 支持''元素和 Fragment
 - [X] 支持事件代理
 - [X] 支持refs
 - [X] 支持dangerouslySetInnerHTML

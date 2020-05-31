@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Document</title>
+        <style>
+            .div11 {
+                background: red;
+            }
+            .div12 {
+                background: green;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>demo</h1>
+        <div id="container"></div>
+        <script src="../node_modules/es5-shim/es5-shim.js"></script>
+        <script src="../node_modules/es5-shim/es5-sham.js"></script>
+        <script src="../dist/index.aio.js"></script>
+        <script>
+            const { Component, render, createElement, Fragment } = sandjs;
+
+            function Component1() {
+                return createElement('', null, [
+                    createElement('li', null, '1'),
+                    createElement('li', null, '2'),
+                    createElement('li', null, '3'),
+                ])
+            }
+            function Component2() {
+                return createElement(Fragment, null, [
+                    createElement('li', null, '4'),
+                    createElement('li', null, '5'),
+                    createElement('li', null, '6'),
+                ])
+            }
+            class MyC1 extends Component {
+                render() {
+                    return createElement('ul', null, [
+                        createElement(Component1),
+                        createElement(Component2),
+                    ]);
+                }
+            }
+
+            render(
+                createElement(MyC1, null, []),
+                document.getElementById('container')
+            );
+        </script>
+    </body>
+</html>

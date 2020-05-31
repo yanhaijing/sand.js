@@ -45,6 +45,7 @@ export function createElement(
 }
 
 export { Component, PureComponent } from './component';
+export {Profiler} from './profiler';
 export { useState, useEffect } from './hook';
 export { createContext } from './context';
 export { createPortal } from './portal';

@@ -8,6 +8,7 @@ import { dash2camel, propName2eventName } from './util/util';
 import { SandPropsType, SandChildType, DoneType } from './type';
 import { SandElement } from './element';
 import { Transaction, globalTaskQueue } from './queue';
+import { SANDJS_PORTAL_CONTAINER } from './portal';
 
 type PropValueType = { [key: string]: any } | string | boolean | number | null;
 
@@ -101,6 +102,7 @@ export function diffProps(
         if (
             propName === 'children' ||
             propName === 'ref' ||
+            propName === SANDJS_PORTAL_CONTAINER ||
             propName === 'dangerouslySetInnerHTML'
         ) {
             continue;

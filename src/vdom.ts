@@ -10,6 +10,7 @@ import {
     EffectFunctionRetureType,
 } from './hook';
 import { Context } from './context';
+import { SANDJS_PORTAL_TAG, SANDJS_PORTAL_CONTAINER } from './portal';
 
 export type VdomType =
     | DOMTextComponent
@@ -150,6 +151,100 @@ export class DOMFragmentComponent {
         );
         this.lastPlaceholderDom = lastPlaceholderDom;
         parent.append(lastPlaceholderDom);
+
+        this.childVdoms = diffChildren(
+            this,
+            [],
+            props.children,
+            this.childVdoms,
+            () => {
+                done();
+            }
+        ); // 旧孩子设置为空，相当于全部设置为新的
+
+        this.renderedElement = element;
+    }
+    receiveComponent(done: DoneType) {
+        this.isDirty = false;
+        const { element, renderedElement } = this;
+        const nextProps = element.props;
+        const curProps = renderedElement.props;
+
+        this.renderedElement = element;
+
+        this.childVdoms = diffChildren(
+            this,
+            curProps.children,
+            nextProps.children,
+            this.childVdoms,
+            () => {
+                done();
+            }
+        );
+    }
+    unmountComponent() {
+        const { childVdoms } = this;
+
+        for (const child of childVdoms) {
+            child.unmountComponent();
+        }
+    }
+}
+
+export class DOMProtalComponent {
+    element: SandElement;
+    parent!: VdomType | DOMRootComponent; // 父元素dom节点
+    protalContainer!: DOMRootComponent; // 父元素dom节点
+    lastPlaceholderDom!: Comment; // 当前元素dom节点
+    childVdoms: VdomType[] = []; // 子元素虚拟dom节点
+    renderedElement!: SandElement;
+    previousVdomSibling?: VdomType;
+    nextVdomSibling?: VdomType;
+    isDirty = false;
+
+    constructor(element: SandElement) {
+        this.element = element;
+    }
+    getNativeDoms(): NativeDomType[] {
+        return [
+            ...this.childVdoms.reduce(
+                (prev, vdom) => [...prev, ...vdom.getNativeDoms()],
+                [] as NativeDomType[]
+            ),
+            this.lastPlaceholderDom,
+        ];
+    }
+    append(vdom: VdomType | NativeDomType) {
+        this.protalContainer.insertBefore(vdom, this.lastPlaceholderDom);
+    }
+    remove(vdom: VdomType) {
+        this.protalContainer.remove(vdom);
+    }
+    insertBefore(
+        newItem: VdomType | NativeDomType,
+        existingItem: NativeDomType
+    ) {
+        this.protalContainer.insertBefore(newItem, existingItem);
+    }
+    getContext(): Context {
+        return this.parent.getContext();
+    }
+    handleError(e: Error) {
+        this.parent.handleError(e);
+    }
+    mountComponent(parent: VdomType | DOMRootComponent, done: DoneType) {
+        this.parent = parent;
+        
+        const { element } = this;
+        const { props } = element;
+        const protalContainer = new DOMRootComponent(props[SANDJS_PORTAL_CONTAINER]);
+        this.protalContainer = protalContainer;
+
+        const lastPlaceholderDom = document.createComment(
+            'DOMProtalComponent lastPlaceholderDom'
+        );
+        this.lastPlaceholderDom = lastPlaceholderDom;
+        protalContainer.append(lastPlaceholderDom);
 
         this.childVdoms = diffChildren(
             this,
@@ -786,6 +881,10 @@ export function instantiateDOMComponent(
         return new DOMTextComponent('');
     }
 
+    // Portal
+    if (typeof tag === 'object' && tag.type === SANDJS_PORTAL_TAG) {
+        return new DOMProtalComponent(tag);
+    }
     // fragment <></>
     if (typeof tag === 'object' && tag.type === '') {
         return new DOMFragmentComponent(tag);

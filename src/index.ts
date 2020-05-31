@@ -20,6 +20,7 @@ export function render(
 
 interface ConfigType {
     key?: SandKeyType;
+    [key: string]: any;
 }
 type ChildrenType = SandChildType[] | [SandChildType[]];
 
@@ -46,3 +47,4 @@ export function createElement(
 export { Component, PureComponent } from './component';
 export { useState, useEffect } from './hook';
 export { createContext } from './context';
+export { createPortal } from './portal';

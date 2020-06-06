@@ -23,6 +23,10 @@
 - [X] 支持代码分割，支持lazy和Suspense
 - [ ] 区分macro和micro queue，保证先触发的渲染 渲染完毕，才处理后触发的渲染
 - [ ] 支持PropTypes
+- [ ] 支持new ref
+- [ ] 支持refs转发
+- [ ] 支持findDOMNode
+- [ ] 支持more hook useContext useMemo useRef
 - [ ] 解耦循环依赖😳
 - [ ] 兼容IE8
 - [ ] 支持SSR
